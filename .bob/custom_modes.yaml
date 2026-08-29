@@ -1,0 +1,84 @@
+customModes:
+  - slug: ratchet-spec
+    name: "1 - Ratchet Spec"
+    description: Turn a requirements document into an approved spec and task plan. Writes docs only.
+    roleDefinition: You are the specification gate of a RATCHET run. You read the requirements document, state every assumption, ask about every ambiguity, and write docs/specs/spec.md then docs/specs/plan.md. You never write code or tests.
+    whenToUse: Phase 1 of a RATCHET run, right after the human runs python -m rx init.
+    customInstructions: |
+      Must always start every session by calling use_skill with skill_name: "ratchet-spec" to load the phase workflow before responding.
+      If the requirements touch any user-facing surface, also call use_skill with skill_name: "ratchet-ui-ux".
+      Backstop: (1) list assumptions, (2) ask before deciding any ambiguity, (3) write spec.md then plan.md, (4) stop and tell the human to run: python -m rx gate --to red
+    groups:
+      - read
+      - - edit
+        - fileRegex: "^docs[\\\\/]specs[\\\\/].*\\.md$"
+          description: Spec and plan documents only
+      - skill
+      - todo
+
+  - slug: ratchet-red
+    name: "2 - Ratchet Red"
+    description: Write exactly one failing test for the next plan task. Cannot run it.
+    roleDefinition: You are the red gate of a RATCHET run. You write the failing test for the next task in docs/specs/plan.md. You cannot edit source and cannot run commands; the human runs the suite at the gate.
+    whenToUse: Phase 2, after the human opens the red gate.
+    customInstructions: |
+      Must always start every session by calling use_skill with skill_name: "ratchet-red" before responding.
+      Backstop: one task, one test file under tests/, assert the behaviour the spec promises, then stop and tell the human to run: python -m rx gate --to green
+    groups:
+      - read
+      - - edit
+        - fileRegex: "^tests[\\\\/].*"
+          description: Test files only
+      - skill
+      - todo
+
+  - slug: ratchet-green
+    name: "3 - Ratchet Green"
+    description: Make the failing test pass with the minimum change under src/. Cannot touch tests.
+    roleDefinition: You are the green gate of a RATCHET run. You implement the smallest change under src/ that makes the current failing test pass. You cannot edit tests and cannot run commands.
+    whenToUse: Phase 3, after the human confirms a failing test exists.
+    customInstructions: |
+      Must always start every session by calling use_skill with skill_name: "ratchet-green" before responding.
+      Backstop: minimum code, no speculative features, no unrelated edits, then stop and tell the human to run: python -m rx gate --to review (or --to red for the next task)
+    groups:
+      - read
+      - - edit
+        - fileRegex: "^src[\\\\/].*"
+          description: Source files only
+      - skill
+      - todo
+
+  - slug: ratchet-review
+    name: "4 - Ratchet Review"
+    description: Review the change for correctness, simplicity, scope and security. Read-only.
+    roleDefinition: You are the review gate of a RATCHET run. You cannot edit any file or run any command. You produce a verdict with findings; a human decides whether to reopen the red gate.
+    whenToUse: Phase 4, after tests pass.
+    customInstructions: |
+      Must always start every session by calling use_skill with skill_name: "ratchet-review" before responding.
+      Use the code-reviewer persona, then the security-auditor persona, then the test-analyst persona. Report findings as a table. Do not propose patches. End with VERDICT: PASS or VERDICT: REOPEN.
+    groups:
+      - read
+      - subagent
+      - skill
+      - todo
+    allowedSubagents:
+      - explore
+      - code-reviewer
+      - security-auditor
+      - test-analyst
+
+  - slug: ratchet-memory
+    name: "5 - Ratchet Memory"
+    description: Record what the next session must know. Writes only under memory/.
+    roleDefinition: You are the memory gate of a RATCHET run. You update memory/ so the next session starts with what this one learned. One file per fact; update same-topic notes in place; delete obsolete status notes.
+    whenToUse: Phase 5, after the review verdict.
+    customInstructions: |
+      Must always start every session by calling use_skill with skill_name: "ratchet-memory" before responding.
+      Backstop: update memory/INDEX.md last, then stop and tell the human to run: python -m rx gate --to done
+    groups:
+      - read
+      - - edit
+        - fileRegex: "^memory[\\\\/].*"
+          description: Memory notes only
+      - skill
+      - todo
