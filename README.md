@@ -57,9 +57,10 @@ under `cmd /c` and `rx init` refuses a path with a space.
    python -m rx gate --to red
    ```
 4. **Loop.** New Bob task per phase (the `SessionStart` hook announces the phase):
-   `2 - Ratchet Red` → `gate --to green` → `3 - Ratchet Green` → `gate --to red` for the next task,
-   or `gate --to review` → `4 - Ratchet Review` → `gate --to memory` → `5 - Ratchet Memory` →
-   `gate --to done`.
+   `2 - Ratchet Red` → `gate --to green` → `3 - Ratchet Green` → tick the finished task in
+   `docs/specs/plan.md` by hand and commit (the red skill picks the first *unchecked* task; the
+   gate never edits the plan) → `gate --to red` for the next task, or `gate --to review` →
+   `4 - Ratchet Review` → `gate --to memory` → `5 - Ratchet Memory` → `gate --to done`.
 
 The `/ratchet-*` completions in the chat box are *skills*, not modes: they load a phase's
 instructions into whatever mode is current. Phase entry is the mode picker.
@@ -92,8 +93,11 @@ under `.ratchet/` or `.bob/`. After `done`, every write is blocked until a new `
 
 ## Where the ledger lives
 
-`.ratchet/runs/<run-id>/ledger.jsonl` — one JSON object per line: `seq`, `ts`, `phase`, `event`
-(`init` / `gate` / `write` / `deny` / `stop`), `tool`, `path`, `reason`, `prev`, `mac`.
+`.ratchet/runs/<run-id>/ledger.jsonl` — one JSON object per line. Every line carries `seq`, `ts`,
+`event` (`init` / `gate` / `write` / `deny` / `stop`), `prev`, `mac`, and every line except `gate`
+carries `phase`. Per event: `init` adds `run`, `doc`, `doc_sha256`; `gate` adds `from`, `to` (plus
+`tests_exit`, `tests_sha` at `--to green`; `tests_exit`, `security_exit` at `--to review`); `write`
+and `deny` add `tool`, `path` (`deny` also `reason`); `stop` adds `changed`, `unrecorded`.
 `.ratchet/state.json` holds the current run and phase; the hook reads **that**, not the mode
 (Bob's hook payload carries no mode field). `.bobignore` hides the ledger and `referee/` from Bob's
 file tools; both are committed to git.
@@ -106,8 +110,9 @@ python -m rx report    # gates, recorded writes, and every BLOCK line
 ```
 
 `verify` asserts: `init` first · every transition legal · no `seq` gaps · chain unbroken · every
-MAC matches · no Stop record with unrecorded changes. Flip one byte in the ledger and run it again
-to see it fail; restore the file and it passes with the same count.
+MAC matches · no Stop record with unrecorded changes. Flip one byte inside a value — e.g. `"green"`
+→ `"greem"` — and run it again to see it fail, naming the line; restore the file and it passes with
+the same count.
 
 Optional: `python -m tools.watsonx_summary .ratchet/runs/<run>/ledger.jsonl` sends the run receipt
 (gates, blocked calls, write count, security exit) to watsonx.ai `granite-4-h-small` for a
@@ -122,7 +127,7 @@ never in a committed file.
 | `.bob/custom_modes.yaml`, `.bob/skills/`, `.bob/agents/`, `.bob/rules/`, `.bob/hooks/` | the Bob configuration |
 | `AGENTS.md` | the workspace router (memory convention, layout) |
 | `Karpathy-Guidelines.md` | the behavioural constitution; summarised in `.bob/rules/00-karpathy.md` |
-| `demo/` | the SHOP-412 ticket, the A / A′ / B protocol and results (`demo/README.md`), the video script |
+| `demo/` | the SHOP-412 ticket, the A / A′ / B protocol and results (`demo/README.md`), the video script; `demo/placeholder.txt` is the stand-in document of the committed smoke run `r20260830-005639` — that ledger's genesis line hashes it, not the DOCX |
 | `referee/` | hidden acceptance tests, SHA-256 committed before any run |
 | `bob_sessions/` | Bob task screenshots and evidence |
 | `docs/specs/probe-findings.md` | what Bob 2.0.3 actually sends to hooks, and every smoke result |

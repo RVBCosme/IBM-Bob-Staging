@@ -115,12 +115,18 @@ scratch/
 ```
 (`scratch/` holds the hook probe's throwaway writes.)
 
-`.bobignore` (workspace root):
+`.bobignore` (workspace root — repo file is authoritative; as of 2026-08-30 it also carries `referee/` from Task 12,
+`docs/specs/probe-findings.md` so the spec mode does not read it as a spec, and `.pytest_cache/`, `__pycache__/`
+so the referee's node ids and `.pyc` files stay invisible to Bob after a `pytest referee` run):
 ```
 .env
 *.key
 secrets/
 .ratchet/runs/*/ledger.jsonl
+referee/
+docs/specs/probe-findings.md
+.pytest_cache/
+__pycache__/
 ```
 (Not `.ratchet/runs/` — the review phase must be able to read `.ratchet/runs/<run>/security.txt`.
 Verified with `git check-ignore`: the ledger stays hidden, `security.txt` stays readable. A `!`
@@ -1733,7 +1739,7 @@ Prerequisite: Task 7 Steps 1–5 and Task 11 Step 4 done. Task 13, the `demo/SCR
 slide (Task 16) and the Task 18 drafts *without numbers* are committed before Step 1 (or done in a second clone);
 recording, numbers and the final write-ups happen after Step 8. Done 2026-08-30 ~02:50 SGT: `demo/SCRIPT.md`,
 `demo/stills/karpathy-slide.html` and the three Task 18 drafts (placeholders, no numbers) committed; `docs/specs/probe-findings.md`
-added to `.bobignore` so the spec mode does not read it as a spec; exact sequence in
+added to `.bobignore` so the spec mode does not read it as a spec, and `.pytest_cache/` + `__pycache__/` added so the referee's node ids stay hidden after leg A; exact sequence in
 `docs/superpowers/handoffs/2026-08-30-tasks-14-19-driver-pack.md`. Any human edit during the run
 is committed immediately, or the next Stop records it as unrecorded and the run cannot reach `done`.
 - [ ] **Step 1:** On `main`: `python -m rx init --doc demo/SHOP-412.docx; git add -A; git commit -m "demo: leg B run started"` → phase `spec`.
@@ -1743,7 +1749,7 @@ re-announces the phase; continuity lives on disk, not in the chat.
 Expected beat: Bob asks *"what happens when the discount exceeds the subtotal?"* Answer: `Never below zero.`
 Then `python -m rx gate --to red`.
 - [ ] **Step 3 — red/green loop** per plan task: `ratchet-red` mode → `Next task` → `gate --to green` →
-`ratchet-green` mode → `Next task` → `gate --to red` … until plan is done, then `gate --to review`.
+`ratchet-green` mode → `Next task` → **by hand: tick the finished task in `docs/specs/plan.md` (`- [ ] T<n>` → `- [x] T<n>`) and commit it at once** (the red skill picks the first *unchecked* task and cannot edit the plan; `rx gate` never touches it — an unticked task is re-run and the green gate then refuses because its test already passes) → `gate --to red` … until plan is done, then `gate --to review`.
 Somewhere in green, prompt once: `Also add a test for this.` Expected beat: **Bob refuses at the rules/skill
 layer, before any tool call** — in Smoke 11a (2026-08-30) `ratchet-green` mode declined an out-of-phase write
 twice, even when told it was an authorised smoke test, so the `fileRegex` validator was never reached. Narrate it
@@ -1811,7 +1817,7 @@ markdown if the IDE offers export.
 
 ### Task 18: Write-ups (Person C)
 
-Drafted 2026-08-30 without numbers (`<angle-bracket>` / `<fill: …>` placeholders): `docs/submission/problem-solution.md`, `docs/submission/bob-usage.md`, `README.md`. Fill from `demo/README.md` after Task 15 Step 8 and re-count problem-solution (≤ 500 words).
+Drafted 2026-08-30: `docs/submission/problem-solution.md` and `docs/submission/bob-usage.md` carry `<angle-bracket>` / `<fill: …>` placeholders; `README.md` is complete (it carries no numbers). Fill the two submission files from `demo/README.md` after Task 15 Step 8. The submission form takes plain text: paste problem-solution as prose (table → sentences, no markdown), and count it with `wc -w` on that pasted text — the markdown draft is at the limit already (≈499 words markdown-stripped, 541 by `wc -w`), so cut before you fill the two bracketed sentences.
 
 - [ ] `docs/submission/problem-solution.md` (≤500 words): problem (§1 of spec), target user, what
 RATCHET is (four layers, one sentence each), how a developer uses it (the five phase modes and
@@ -1828,12 +1834,21 @@ five modes, where the ledger lives, how to verify (`rx verify`, `rx report`, `.b
 
 ### Task 19: Submit (Person C, **≥ 2 hours before deadline**)
 
-- [ ] **Step 0 — confirm the deadline and the repo (unowned until now).** Open the BeMyApp My Team page and
-record the exact deadline — spec §8 says Aug 30 10:00 ET, which is **Aug 30 22:00 SGT** on this machine
-(unconfirmed; if sources still disagree, take the earliest). Local-time arithmetic as of the Task 7/11/13 commits: it was ~02:20 SGT on Aug 30, i.e. ~19 h 40 min to 22:00 SGT, so the "≥ 2 hours before deadline" submission cut-off is **20:00 SGT** (~17 h 40 min away); Tasks 14–18 must fit inside that window — and whether a template repo is required; write
+- [x] **Step 0 — confirm the deadline and the repo.** Confirmed 2026-08-30 ~03:35 SGT in Chrome, logged in, on the
+hackathon platform `https://compete.082601.watsonx-challenge.ibm.com/competitions/pre-techxchange` (Details, Complete
+the hackathon, My Team → Submissions): **"Submissions close August 30, 2026, 10:00 AM ET"** = **22:00 SGT Sun 2026-08-30**;
+no work on any deliverable after that. Team **GameTime**, 1/5 members, this user is Team Lead; **no submission yet**
+(0/100); the team IBM Cloud account was already requested (button greyed out). The form has exactly four required
+fields — video URL, problem/solution statement (≤ 500 words, plain text), technology statement (Bob + watsonx), repo
+URL "including exported IBM Bob report" — plus optional links and no attachments; drafts can be saved; resubmitting
+replaces the whole submission. The template repo is **optional**: `https://github.com/watsonxhackathon/ibm-hackathon-template`
+(spec §10 item 1 resolved — different org from the 404 URL). Ignore `aibuilderschallenge-bobhub.bemyapp.com`: that is a
+different event (student monthly challenge, Aug 31 deadline). Original wording: spec §8 says Aug 30 10:00 ET, which is
+**Aug 30 22:00 SGT** on this machine
+(now confirmed). Local-time arithmetic as of the Task 7/11/13 commits: it was ~02:20 SGT on Aug 30, i.e. ~19 h 40 min to 22:00 SGT, so the "≥ 2 hours before deadline" submission cut-off is **20:00 SGT** (~17 h 40 min away); Tasks 14–18 must fit inside that window — and whether a template repo is required; write
 both into hand-off §1. Decide whether `RVBCosme/IBM-Bob-Staging` is the submitted repo and flip it to Public in
 the GitHub web UI (Settings → Danger zone; `gh` is not installed here).
-- [ ] `git grep -iE "apikey|api_key|Bearer [A-Za-z0-9]" -- ':!docs' ':!tools/watsonx_summary.py'` → must return nothing. (Returned nothing on `c14268f`, 2026-08-30 02:40 SGT; re-run before the final push.)
+- [ ] `git grep -iE "apikey|api_key|Bearer [A-Za-z0-9]" -- ':!docs' ':!tools/watsonx_summary.py' ':!README.md'` → must return nothing. (`README.md` is excluded only because its watsonx paragraph names the `WATSONX_APIKEY` variable, not a value; the unfiltered grep returned nothing on `c14268f` and exactly that README line from `6de394f` on. Re-run before the final push.)
 - [ ] Push to a **public** GitHub repo; open it in a private window; confirm `bob_sessions/` and `.ratchet/runs/` are present.
 - [ ] Submit video URL, both statements, repo URL on the My Team page. Read the AI Submission Advisor email; fix any "Needs a second look" and resubmit **all** deliverables.
 

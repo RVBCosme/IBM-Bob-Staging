@@ -2,9 +2,11 @@
 
 <!-- Observations marked <fill> are completed from leg B (plan Task 15) before submission. -->
 
-Everything below is configuration committed in this repository. The only UI-only state is
-workspace trust and the auto-approve toggles for Read / Skill / Subagent, which a fresh clone does
-not inherit — the demo grants trust on camera and says so. Build: Bob IDE 1.126.0+bob2.0.3 on
+Everything below is configuration committed in this repository, except two things a fresh clone
+does not inherit: the four hook entries, which `python -m rx init` writes into the global
+`%USERPROFILE%\.bob\settings\settings.json` (a copy is committed as `.bob/settings.example.json`),
+and the UI-only state — workspace trust, granted on camera, and the auto-approve toggles for
+Read / Skill / Subagent, pre-enabled and narrated. Build: Bob IDE 1.126.0+bob2.0.3 on
 Windows 11. Every "observed" note cites `docs/specs/probe-findings.md` §7.1 or `bob_sessions/A/`.
 
 ## Custom modes — `.bob/custom_modes.yaml`
@@ -47,9 +49,9 @@ Agent mode Bob auto-loaded `ratchet-spec` after reading `.ratchet/state.json` (S
 `00-karpathy.md` (four lines, injected into every conversation) and `01-ratchet.md` (the
 protocol: only the human opens gates; never retry a refused or blocked call). Mode-specific
 folders `.bob/rules-ratchet-red/` and `.bob/rules-ratchet-green/` add one rule each. `AGENTS.md`
-is the workspace router. Observed: these three layers make Bob refuse out-of-phase writes, trivial
-subagent spawns and terminal commands *before any tool call* (Smokes 9, 11a, 12) — the honest
-consequence is that most refusals leave no ledger record.
+is the workspace router. Observed: these layers make Bob refuse out-of-phase writes and terminal
+commands *before any tool call* (Smokes 11a, 12); Bob also declined a trivial subagent spawn on its
+own judgment (Smoke 9) — the honest consequence is that most refusals leave no ledger record.
 
 ## Personas — `.bob/agents/*.md`
 
@@ -63,8 +65,8 @@ passes through `PreToolUse` under the parent's `session_id` (Smokes 6b and 10).
 `ratchet-review` holds the `subagent` group with
 `allowedSubagents: [explore, code-reviewer, security-auditor, test-analyst]`; the allow-list filters
 built-in presets and `.bob/agents/*` together, so the three personas must be named. Observed
-(Smoke 9): a generic "use the code-reviewer persona to list files" was declined twice as too
-trivial; `Spawn the code-reviewer subagent to review src/cart.py against docs/specs/spec.md and
+(Smoke 9): a generic `Use the code-reviewer persona to list the files under src/` was declined
+twice as too trivial; `Spawn the code-reviewer subagent to review src/cart.py against docs/specs/spec.md and
 return its findings table` spawned **one** `code-reviewer` subagent (subagent row, 8 tools, 43 s;
 `smoke-9.png`), after which Bob ran the security-auditor and test-analyst passes itself,
 sequentially, and issued `VERDICT: REOPEN`. One spawned persona plus two sequential self-run
@@ -82,9 +84,11 @@ remove them. Hooks respect workspace trust.
 | `Stop` | `.bob/hooks/record.cmd` | reconciles `git status --porcelain --untracked-files=all` against write records; flags unrecorded changes |
 | `SessionStart` | `.bob/hooks/session.cmd` → `rx.session` | announces the run and phase; prints `memory/INDEX.md` |
 
-The stdin payload measured on 2.0.3 is `{session_id, cwd, hook_event_name, tool_name,
-tool_input, tool_use_id}` (the docs page shows different keys; the gate reads the measured ones and
-accepts the documented ones as a fallback). There is no mode field, so the hook reads
+The `PreToolUse` stdin payload measured on 2.0.3 is `{session_id, cwd, hook_event_name,
+tool_name, tool_input, tool_use_id}`; `PostToolUse` adds `tool_response` (a string), and
+`SessionStart` / `Stop` carry only the three common keys plus `source` / `last_assistant_message`
+(the docs page shows different keys; the gate reads the measured ones and accepts the documented
+ones as a fallback). There is no mode field, so the hook reads
 `.ratchet/state.json`. Exit 2 has no effect on `PostToolUse` or `Stop` — those record, they cannot
 block. Observed live: `RATCHET blocked execute_command on -: terminal commands are blocked in every
 phase` on screen and as ledger record 16 (Smoke 12, `smoke-12-hook.png`); the earlier probe hooks

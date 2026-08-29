@@ -16,7 +16,7 @@ merged code.
 
 1. **Withhold** — each SDLC phase runs in a custom mode granted only the tool groups it needs;
    no phase mode holds `execute`, `mode` or `subtask`.
-2. **Declare** — each mode's `fileRegex` names the one directory it may edit.
+2. **Declare** — each editing mode's `fileRegex` names the one directory it may edit.
 3. **Block** — a `PreToolUse` hook in global settings (no mode change can remove it) exits 2 on
    every write outside the phase written on disk and on every terminal command.
 4. **Audit** — hooks and the human-run gate script, never the model, record every transition,

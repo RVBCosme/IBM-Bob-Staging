@@ -108,8 +108,11 @@ inspiration, and the two items above as prior art.
 ```
 C:\ratchet\                          <- NOT under OneDrive, NO spaces in path
   AGENTS.md                          auto-loaded router; memory conventions INLINED
-  .bobignore                         .env, *.key, secrets/, referee/, .ratchet/runs/*/ledger.jsonl
-                                     (NOT .ratchet/runs/ - review must read security.txt there)
+  .bobignore                         .env, *.key, secrets/, referee/, .ratchet/runs/*/ledger.jsonl,
+                                     docs/specs/probe-findings.md, .pytest_cache/, __pycache__/
+                                     (NOT .ratchet/runs/ - review must read security.txt there; probe-findings.md
+                                     hidden so the spec mode does not read it as a spec; caches hidden so a
+                                     `pytest referee` run leaves no hidden test names visible to Bob)
   .gitignore
   THIRD_PARTY_NOTICES.md
   .bob\
@@ -456,7 +459,7 @@ allowed write in built-in Agent mode) is 3+4 inside Bob.
 | OneDrive corrupts the chain | Repo at `C:\ratchet`, outside OneDrive |
 | Bob declines to spawn subagents | *"Bob uses subagents sparingly"* — say "in our run, three", never a concurrency number |
 | Prior-art overlap | §3 framing + `THIRD_PARTY_NOTICES.md` |
-| Deadline uncertainty | Portal text says Aug 30 10:00 ET; public listings conflict — **confirm on BeMyApp** |
+| Deadline uncertainty | Confirmed 2026-08-30 on the hackathon platform (compete.082601.watsonx-challenge.ibm.com): submissions close **Aug 30 10:00 AM ET = 22:00 SGT**; the BeMyApp "AI Builders Challenge" listing is a different event |
 
 ---
 
@@ -470,8 +473,9 @@ porting Superpowers files verbatim.
 
 ## 10. Open items for the user
 
-1. **Confirm the real deadline and the repository-template URL on the BeMyApp platform.**
-   `github.com/IBM/ibm-hackathon-template` returns 404.
+1. ~~Confirm the real deadline and the repository-template URL.~~ Resolved 2026-08-30: deadline Aug 30 10:00 AM ET
+   (22:00 SGT); template is optional at `github.com/watsonxhackathon/ibm-hackathon-template` (the `IBM/` URL was the
+   wrong org). Platform: `compete.082601.watsonx-challenge.ibm.com/competitions/pre-techxchange`.
 2. Confirm the installed Bob IDE version is ≥ 2.0.2 on all machines.
 3. Confirm who on the team can mint an IBM Cloud API key and obtain a `project_id`.
 4. Confirm the demo stack is Python + pytest.
