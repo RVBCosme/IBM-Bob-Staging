@@ -59,6 +59,12 @@ Observed `PreToolUse` line, verbatim:
 | `write_file` | `path`, `content`, `line_count` | `edit` |
 | `apply_diff` | `path`, `diff` (SEARCH/REPLACE block with `:start_line:`) | `edit` |
 | `execute_command` | `command` | `execute` |
+| `insert_content` | `path`, `content`, `line` | `edit` (smoke 6c, 2026-08-30) |
+| `search_and_replace` | `path`, `search`, `replace` | `edit` (smoke 6c, 2026-08-30) |
+| `spawn_subagent` | `description`, optional `name` (preset, e.g. `explore`) | `subagent` (smoke 6b/10, 2026-08-30) |
+| `read_file`, `list_files` | `path` (+ `recursive` on `list_files`) | `read` |
+| `glob` | `pattern` (no `path`) | `read` |
+| `use_skill` | `skill_name` | `skill` |
 
 ### 2.2 Advertised to the model in the same session (`availableTools`, 23 names, from `bob.db`)
 
@@ -72,8 +78,8 @@ Matches IBM's tools reference (bob.ibm.com/docs/ide/core-concepts/tools) exactly
 | Read / navigate (always allow) | `read_file`, `list_files`, `glob`, `grep`, `GetSymbolsOverview`, `FindSymbol`, `FindReferencingSymbols`, `read_xlsx`, `search_bob_docs` |
 | Control / UI (always allow) | `use_skill`, `switch_mode`, `update_todo_list`, `ask_followup_question`, `create_chart`, `create_html_artifact` |
 
-`insert_content` and `search_and_replace` were not exercised; by IBM's reference they take a file path and are
-expected to use `path` like the two observed write tools. Confirm with the prompt in §7 before relying on it.
+`insert_content` and `search_and_replace` were exercised on 2026-08-30 (smoke 6c, `probe.log` lines 33–36): both
+carry the file under `path`, so `PATH_KEYS = ("path",)` covers all four write tools.
 MCP tools (none configured here) arrive under their MCP names — anything not in `WRITE_TOOLS`/`EXEC_TOOLS` is
 allowed by the block-list design, so an MCP filesystem tool would be an audit hole; keep `taskAllowedMcpTools`
 empty for the demo.
@@ -185,6 +191,21 @@ python -c "import json,pathlib; h=lambda c:[{'hooks':[{'type':'command','command
 ```
 
 Start a new Bob task (new chat) after each rewrite — the `SessionStart` line shows whether the new config loaded.
+
+### 7.1 Results (2026-08-30, Bob 2.0.3, Agent mode, `probe.log` line numbers)
+
+| # | Result | Evidence |
+|---|---|---|
+| Smoke 3 | **GREEN** — exit 2 blocks | line 13 `PreToolUse write_file scratch/blocked.txt`, no `PostToolUse`, file absent; Bob showed a "blocked by hook" message. `probe2.cmd` also blocked the model's `list_files` (line 12) — exit 2 applies to every PreToolUse |
+| Smoke 4 | **GREEN** — exit 0 allows | lines 17–18 Pre/Post `write_file`, file created |
+| Smoke 6b | **GREEN** | line 24 `spawn_subagent` with `tool_input` keys `name` (`"explore"`), `description`. The subagent's own `glob` reached the hook (lines 25–26) under the **parent's `session_id`** — subagent tool calls are not a hook hole |
+| Smoke 6c | **GREEN** | lines 33–36: `insert_content` keys `content`, `line`, `path`; `search_and_replace` keys `path`, `search`, `replace` |
+| Smoke 10 | **Mechanism confirmed; write leg not exercisable** | line 40 `spawn_subagent` (keys: `description` only → default preset); the subagent never attempted `write_file` (no line between 40 and 41 — the default preset is read-only), the parent wrote `scratch/sub.txt` itself (lines 42–43). Combined with 6b, every tool call a subagent *does* make passes through PreToolUse under the parent's `session_id`; a subagent that can write would be gated the same way. The RATCHET personas are read-only (`groups: [read]`), so this is the case that matters |
+
+| Smoke 7 | **GREEN** | Settings → Skills lists the six `ratchet-*` skills with scope **"Workspace"** (Bob 2.0.3's label for `.bob/skills/`; `bob_sessions/A/smoke-7b.png`). In `1 - Ratchet Spec` mode, `hello` → `use_skill ratchet-spec` (lines 51–52) and Bob asks for the requirements document (`smoke-7.png`) |
+| Smoke 8 | **GREEN** | Settings → Modes lists the five Ratchet modes, scope Workspace (`smoke-8.png`); typing `/ratchet` offers exactly six completions, one per skill with its `SKILL.md` description, no mode among them (`smoke-8b.png`) |
+
+`use_skill` arrives as `tool_name:"use_skill"`, `tool_input:{"skill_name":...}` (line 51, smoke 7).
 
 ## 8. Other facts worth keeping
 
