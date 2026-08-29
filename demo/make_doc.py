@@ -1,0 +1,16 @@
+from docx import Document
+
+d = Document()
+d.add_heading("SHOP-412: Promo codes at checkout", 0)
+d.add_paragraph("Add promotional code support to the cart. Expose one function in src/promo.py:")
+d.add_paragraph("apply_promos(subtotal: float, codes: list[str]) -> float   # returns the total to charge", style="Intense Quote")
+d.add_heading("Codes", 1)
+d.add_paragraph("SAVE20 - 20% off the subtotal.")
+d.add_paragraph("TENOFF - $10.00 off.")
+d.add_paragraph("Any other code is invalid and must raise ValueError. A code may be used once per order.")
+d.add_heading("Stacking", 1)
+d.add_paragraph("Multiple codes may be stacked. Percentage discounts apply before fixed-amount discounts.")
+d.add_heading("Output", 1)
+d.add_paragraph("Totals are rounded to the cent.")
+d.save("demo/SHOP-412.docx")
+print("wrote demo/SHOP-412.docx")
