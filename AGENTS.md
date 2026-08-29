@@ -1,8 +1,8 @@
 # RATCHET workspace
 
 This repository is governed by RATCHET: five phase modes (ratchet-spec, ratchet-red, ratchet-green,
-ratchet-review, ratchet-memory), a PreToolUse hook that blocks out-of-phase writes and all terminal
-commands, and an HMAC-chained ledger in .ratchet/runs/. Humans open gates with `python -m rx gate`.
+ratchet-review, ratchet-memory) whose edit scope Bob restricts by fileRegex, a PreToolUse hook that
+blocks every terminal command and any out-of-phase write that reaches it, and an HMAC-chained ledger in .ratchet/runs/. Humans open gates with `python -m rx gate`.
 
 ## Memory (a RATCHET convention, not a Bob feature)
 - `memory/INDEX.md` is the index: one line per note, `- [Title](file.md) - one-line hook`.
