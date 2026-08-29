@@ -88,8 +88,8 @@ def cmd_gate(a):
     rec = {"event": "gate", "from": frm, "to": to}
     if to == "green":
         r = run_tests()
-        if r.returncode == 0:
-            sys.exit("GATE CLOSED: tests pass; the red phase must add a failing test")
+        if r.returncode in (0, 5):  # 5 = pytest collected no tests
+            sys.exit("GATE CLOSED: tests pass or no tests were collected; the red phase must add a failing test")
         rec["tests_exit"], rec["tests_sha"] = r.returncode, sha_tree(ROOT / "tests")
     if to == "review":
         r = run_tests()

@@ -36,6 +36,13 @@ def test_gate_refuses_green_when_tests_pass(tmp_path):
     assert r.returncode != 0 and "failing test" in r.stderr
 
 
+def test_gate_refuses_green_when_no_tests_collected(tmp_path):
+    fresh(tmp_path)
+    assert rx(tmp_path, "gate", "--to", "red").returncode == 0
+    r = rx(tmp_path, "gate", "--to", "green")  # tests/ is empty: pytest exit 5
+    assert r.returncode != 0 and "failing test" in r.stderr
+
+
 def test_full_happy_path_and_verify(tmp_path):
     fresh(tmp_path)
     assert rx(tmp_path, "gate", "--to", "red").returncode == 0

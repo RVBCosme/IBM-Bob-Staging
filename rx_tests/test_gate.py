@@ -33,6 +33,10 @@ def test_in_phase_write_allowed():
     assert decide(w("src/a.py"), "green", ROOT)[0] is True
 
 
+def test_done_phase_blocks_every_write():
+    assert decide(w("src/a.py"), "done", ROOT) == (False, "outside done scope", "src/a.py")
+
+
 def test_out_of_phase_write_denied():
     assert decide(w("src/a.py"), "red", ROOT)[0] is False
     assert decide(w("tests/test_a.py"), "green", ROOT)[0] is False

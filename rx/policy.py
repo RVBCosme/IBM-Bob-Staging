@@ -8,5 +8,6 @@ PHASE_DIRS = {
     "green": ("src/",),
     "review": (),
     "memory": ("memory/",),
+    "done": (),  # run finished: every write is blocked until a new rx init
 }
 PROTECTED = (".ratchet/", ".bob/")
