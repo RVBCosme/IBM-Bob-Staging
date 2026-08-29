@@ -1713,7 +1713,8 @@ Bob transcript of A and A′ — every terminal command and its output included 
 cat, grep or pytest touched `referee/`, note it under the A/A′ rows in `demo/README.md` and treat that referee
 number as tainted.
 - [ ] **Step 5:** `git add -A; git commit -m "demo: leg A and A-prime"; git checkout main;
-git checkout leg-a -- demo/README.md; git commit -am "demo: legs A and A-prime measured"`.
+git checkout leg-a -- demo/README.md demo/stills; git commit -am "demo: legs A and A-prime measured"`
+(`demo/stills` too — the leg-A stills are Task 16 inputs and would otherwise stay on `leg-a`).
 Confirm `.ratchet\state.json` is back (it is tracked on `main`).
 
 ---
@@ -1730,7 +1731,10 @@ write, one allowed write in built-in Agent mode) is 3+4 inside Bob.
 - [ ] **Step 0:** Nobody but Person A touches the `C:\ratchet` working tree while leg B runs.
 Prerequisite: Task 7 Steps 1–5 and Task 11 Step 4 done. Task 13, the `demo/SCRIPT.md` beats and the Karpathy
 slide (Task 16) and the Task 18 drafts *without numbers* are committed before Step 1 (or done in a second clone);
-recording, numbers and the final write-ups happen after Step 8. Any human edit during the run
+recording, numbers and the final write-ups happen after Step 8. Done 2026-08-30 ~02:50 SGT: `demo/SCRIPT.md`,
+`demo/stills/karpathy-slide.html` and the three Task 18 drafts (placeholders, no numbers) committed; `docs/specs/probe-findings.md`
+added to `.bobignore` so the spec mode does not read it as a spec; exact sequence in
+`docs/superpowers/handoffs/2026-08-30-tasks-14-19-driver-pack.md`. Any human edit during the run
 is committed immediately, or the next Stop records it as unrecorded and the run cannot reach `done`.
 - [ ] **Step 1:** On `main`: `python -m rx init --doc demo/SHOP-412.docx; git add -A; git commit -m "demo: leg B run started"` → phase `spec`.
 Start a **new Bob task (+)** for each phase so the skill loads fresh and the SessionStart hook
@@ -1788,7 +1792,7 @@ sentence on 2026-08-30 (`NOT READY, residual risk: …, manually verify …`), n
 2:25-2:45  Receipt table A / A' / B. "N blocked calls" is the number the ledger proves.
 2:45-3:00  How Bob was used: modes, skills, personas, hooks, subagents. All config, in the repo.
 ```
-- [ ] Write `demo/SCRIPT.md` with the beats above; `git add demo/SCRIPT.md; git commit -m "docs: demo script"`.
+- [x] Write `demo/SCRIPT.md` with the beats above; `git add demo/SCRIPT.md; git commit -m "docs: demo script"`. Done 2026-08-30 (beat block verbatim + shot list); the Karpathy slide for 0:25 is `demo/stills/karpathy-slide.html`.
 - [ ] Record with OBS or Clipchamp (leg B live + stills); keep the raw take.
 - [ ] Upload to YouTube unlisted; test the link in a private window; paste the URL into `demo/README.md`.
 
@@ -1806,6 +1810,8 @@ markdown if the IDE offers export.
 ---
 
 ### Task 18: Write-ups (Person C)
+
+Drafted 2026-08-30 without numbers (`<angle-bracket>` / `<fill: …>` placeholders): `docs/submission/problem-solution.md`, `docs/submission/bob-usage.md`, `README.md`. Fill from `demo/README.md` after Task 15 Step 8 and re-count problem-solution (≤ 500 words).
 
 - [ ] `docs/submission/problem-solution.md` (≤500 words): problem (§1 of spec), target user, what
 RATCHET is (four layers, one sentence each), how a developer uses it (the five phase modes and
@@ -1827,7 +1833,7 @@ record the exact deadline — spec §8 says Aug 30 10:00 ET, which is **Aug 30 2
 (unconfirmed; if sources still disagree, take the earliest). Local-time arithmetic as of the Task 7/11/13 commits: it was ~02:20 SGT on Aug 30, i.e. ~19 h 40 min to 22:00 SGT, so the "≥ 2 hours before deadline" submission cut-off is **20:00 SGT** (~17 h 40 min away); Tasks 14–18 must fit inside that window — and whether a template repo is required; write
 both into hand-off §1. Decide whether `RVBCosme/IBM-Bob-Staging` is the submitted repo and flip it to Public in
 the GitHub web UI (Settings → Danger zone; `gh` is not installed here).
-- [ ] `git grep -iE "apikey|api_key|Bearer [A-Za-z0-9]" -- ':!docs' ':!tools/watsonx_summary.py'` → must return nothing.
+- [ ] `git grep -iE "apikey|api_key|Bearer [A-Za-z0-9]" -- ':!docs' ':!tools/watsonx_summary.py'` → must return nothing. (Returned nothing on `c14268f`, 2026-08-30 02:40 SGT; re-run before the final push.)
 - [ ] Push to a **public** GitHub repo; open it in a private window; confirm `bob_sessions/` and `.ratchet/runs/` are present.
 - [ ] Submit video URL, both statements, repo URL on the My Team page. Read the AI Submission Advisor email; fix any "Needs a second look" and resubmit **all** deliverables.
 

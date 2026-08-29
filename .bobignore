@@ -3,3 +3,4 @@
 secrets/
 .ratchet/runs/*/ledger.jsonl
 referee/
+docs/specs/probe-findings.md

@@ -1,0 +1,24 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Karpathy Guidelines — RATCHET</title>
+<style>
+  html,body{margin:0;height:100%;background:#0f1115;color:#e8e8e8;font:400 2.2vw/1.35 Georgia,"Times New Roman",serif}
+  main{display:flex;flex-direction:column;justify-content:center;min-height:100vh;padding:6vh 10vw;box-sizing:border-box}
+  h1{font-size:2.6vw;font-weight:400;letter-spacing:.04em;color:#9aa4b2;margin:0 0 4vh}
+  ol{margin:0;padding:0;list-style:none;counter-reset:p}
+  li{counter-increment:p;display:grid;grid-template-columns:5vw 1fr;gap:1.5vw;margin:0 0 2.6vh;align-items:baseline}
+  li::before{content:counter(p);font-size:3.2vw;color:#f0b429;text-align:right}
+  b{display:block;font-size:2.6vw}
+  span{color:#b8c0cc}
+  p{margin:5vh 0 0;font-size:2.2vw;color:#f0b429;font-style:italic}
+</style>
+<main>
+  <h1>Karpathy Guidelines — the behavioural constitution</h1>
+  <ol>
+    <li><div><b>Think before coding</b><span>state assumptions; if unclear, stop and ask</span></div></li>
+    <li><div><b>Simplicity first</b><span>minimum code that solves the problem; nothing speculative</span></div></li>
+    <li><div><b>Surgical changes</b><span>touch only what the task requires; every changed line traces to the request</span></div></li>
+    <li><div><b>Goal-driven execution</b><span>failing test → passing test; loop until verified</span></div></li>
+  </ol>
+  <p>Everyone agrees. Nobody can prove they were followed.<br>RATCHET makes each one a gate with a receipt.</p>
+</main>
