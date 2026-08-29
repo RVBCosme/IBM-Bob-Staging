@@ -38,6 +38,9 @@ Hard ordering:
   runs after Task 7 Step 5.** Once the real gate is installed, `.bob/**` is
   unconditionally protected and root files like `AGENTS.md` fall outside every phase's scope, so Bob
   cannot write any of them. That is the gate working; do not relax `policy.PROTECTED` to get around it.
+- **Task 7 Step 5 must be committed before Tasks 14 and 15.** Task 14 Step 2 renames `.ratchet/state.json`
+  and Step 5 relies on `git checkout main` restoring it; both need the file to exist and be tracked, which
+  only `rx init` (Task 7 Step 1) plus its commit produce. Task 15 additionally needs Task 11 Step 4.
 
 Repo location is **`C:\ratchet`** — no spaces, not under OneDrive (OneDrive locks will corrupt
 the append-structured ledger; we hit an OneDrive lock while writing this plan).
@@ -1029,6 +1032,12 @@ git add rx/__main__.py rx_tests/test_cli.py; git commit -m "feat(rx): init/gate/
 
 **Files:** `demo/placeholder.txt` (temporary doc for init)
 
+- [ ] **Step 0: Probe-config smokes first — they are lost the moment Step 1 replaces `settings.json`.**
+With the five `probe.cmd` entries still installed run probe-findings §7 smokes 3/4 (live block via `probe2.cmd`,
+then allow), 6b (`spawn_subagent` payload keys), 6c (`insert_content` / `search_and_replace` use `path`) and 10
+(a subagent's write seen by the hook), plus the Smoke 7 and Smoke 8 screenshots (Task 10 Step 7, Task 8 Step 6).
+Screenshots → `bob_sessions/A/`; `git add bob_sessions; git commit -m "docs(bob): probe-config smokes"`.
+
 - [ ] **Step 1: Init a throwaway run and install the real hooks**
 
 ```powershell
@@ -1075,9 +1084,15 @@ Copy-Item $lp "$env:TEMP\ledger.bak"                      # back up BEFORE tampe
 python -m rx verify                                       # FAIL
 Move-Item -Force "$env:TEMP\ledger.bak" $lp               # restore the file - NEVER git checkout
 python -m rx verify                                       # PASS, same record count
+Copy-Item $lp "$env:TEMP\ledger.bak"                      # back up again
+(Get-Content $lp) | Where-Object { $_ -notmatch '"seq":2,' } | Set-Content $lp   # delete record 2
+python -m rx verify                                       # FAIL: seq gap
+Move-Item -Force "$env:TEMP\ledger.bak" $lp               # restore - NEVER git checkout
+python -m rx verify                                       # PASS, same record count
 ```
 Expected: `PASS: N records ok`, then `FAIL: line 2: bad mac` (line 2 is the canary deny from
-Step 2), then the **same** `PASS: N records ok`. If N drops, the ledger was truncated, not
+Step 2), then the **same** `PASS: N records ok`, then `FAIL: line 2: seq gap (got 3)` (the deleted
+record — spec §7 row 13 needs both cases), then the same `PASS: N records ok` again. If N drops, the ledger was truncated, not
 restored. **Never `git checkout -- .ratchet`** — it reverts to the last commit and silently deletes
 every hook-written record since. **Screen-record this** — it is the money shot, and it is far
 easier at 5 lines than at 200.
@@ -1639,7 +1654,9 @@ python -m tools.watsonx_summary .ratchet/runs/<run>/ledger.jsonl
 ```
 (`-m` from the repo root, not `python tools/…py` — script mode puts `tools/` on `sys.path`, not the
 root, so `from rx import ledger` fails. No `tools/__init__.py` is needed on 3.10.)
-Expected: three lines of text. Screenshot the output (never the env vars) → `demo/watsonx-verdict.png`.
+Expected: three lines of text. Screenshot the output (never the env vars) → `demo/watsonx-verdict.png`,
+and commit it at once (`git add demo/watsonx-verdict.png; git commit -m "docs: watsonx verdict"`) — an
+untracked file is an unrecorded change to the next Stop hook.
 **If this is not working within 90 minutes, cut it.** The gates do not depend on it.
 
 - [ ] **Step 4: Commit** `git add tools/watsonx_summary.py; git commit -m "feat: watsonx.ai release-readiness verdict"`
@@ -1647,6 +1664,9 @@ Expected: three lines of text. Screenshot the output (never the env vars) → `d
 ---
 
 ### Task 14: Legs A and A′ — unguarded baseline (Person C, ~6 Bobcoins)
+
+Prerequisite: Task 7 Step 5 committed — `git ls-files .ratchet/state.json` must print the path (Step 2
+renames it; Step 5 relies on `git checkout main` restoring it).
 
 - [ ] **Step 1: Freeze the start state:** `git tag ab-start; git checkout -b leg-a`.
 - [ ] **Step 2: Disable gating AND the rules** so the baseline is honest — rules are injected into
@@ -1663,8 +1683,15 @@ that leg A ran with hooks, rules and router removed.
 Bobcoin gauge before/after. Then: `python -m pytest referee -q`. Record `passed/8` in `demo/README.md`.
 Expected: `test_total_never_negative` fails (total = −5.00). **If Bob asks about the negative case,
 answer exactly as in leg B ("Never below zero") and record that it asked** — report whatever happens.
+- [ ] **Step 3b: Capture leg A before repairing it.** Screenshot `src/promo.py` (the `total = subtotal - discount`
+line) → `demo/stills/leg-a-promo.png` and the `python -m pytest referee -q` output → `demo/stills/leg-a-referee.png`.
+These are Task 16's stills; nothing else records them.
 - [ ] **Step 4: Leg A′.** Same task, continue: paste the referee failure output and say `Fix this.`
 Re-run referee; record time, coins, pass count. This is the honest cost of A.
+- [ ] **Step 4b: Transcript check (`demo/README.md` line 6, spec §5).** Before recording numbers, search the full
+Bob transcript of A and A′ — every terminal command and its output included — for `referee`. If any read, ls,
+cat, grep or pytest touched `referee/`, note it under the A/A′ rows in `demo/README.md` and treat that referee
+number as tainted.
 - [ ] **Step 5:** `git add -A; git commit -m "demo: leg A and A-prime"; git checkout main;
 git checkout leg-a -- demo/README.md; git commit -am "demo: legs A and A-prime measured"`.
 Confirm `.ratchet\state.json` is back (it is tracked on `main`).
@@ -1678,7 +1705,9 @@ and **narrated**. Re-run the Task 7 Step 2 canary first (mandatory before every 
 since Task 7, also re-run Smoke 12 in Bob once (spec §7 footer).
 
 - [ ] **Step 0:** Nobody but Person A touches the `C:\ratchet` working tree while leg B runs.
-Tasks 13, 16 and 18 finish before Step 1 or happen in a second clone. Any human edit during the run
+Prerequisite: Task 7 Steps 1–5 and Task 11 Step 4 done. Task 13, the `demo/SCRIPT.md` beats and the Karpathy
+slide (Task 16) and the Task 18 drafts *without numbers* are committed before Step 1 (or done in a second clone);
+recording, numbers and the final write-ups happen after Step 8. Any human edit during the run
 is committed immediately, or the next Stop records it as unrecorded and the run cannot reach `done`.
 - [ ] **Step 1:** On `main`: `python -m rx init --doc demo/SHOP-412.docx; git add -A; git commit -m "demo: leg B run started"` → phase `spec`.
 Start a **new Bob task (+)** for each phase so the skill loads fresh and the SessionStart hook
@@ -1696,12 +1725,15 @@ the built-in Agent mode once and prompt `run pytest`: the gate blocks `execute_c
 panel if Bob fans out (do not promise it). Then `gate --to memory`.
 - [ ] **Step 5 — memory:** `ratchet-memory` mode → `Record what we learned` → `gate --to done`.
 - [ ] **Step 6:** `python -m rx verify` (PASS — note the record count). `Copy-Item` the ledger to
-`$env:TEMP\ledger.bak`, tamper one byte with a token that occurs in *this* ledger (e.g.
-`-replace 'SAVE20','SAVE21'`), `verify` (FAIL), `Move-Item -Force` it back, `verify` (PASS, same
+`$env:TEMP\ledger.bak`, tamper one byte with a token that certainly occurs in *this* ledger — it stores only
+event/phase/tool/path/reason fields, so `SAVE20` never does; use
+`-replace '"phase":"green"','"phase":"greem"'` — `verify` (FAIL), `Move-Item -Force` it back, `verify` (PASS, same
 count). **Never `git checkout -- .ratchet` here** — leg B's ledger is uncommitted since Step 1 and
 checkout would erase the whole run. Then `python -m rx report` and `python -m pytest referee -q` →
 record `passed/8`.
-- [ ] **Step 7:** `python -m tools.watsonx_summary .ratchet/runs/<run>/ledger.jsonl` (if Task 13 shipped).
+- [ ] **Step 7 (if Task 13 shipped):** in the terminal that will run it, first set `$env:WATSONX_APIKEY` and
+`$env:WATSONX_PROJECT_ID` off camera (they are process-scoped; Task 13 Step 3's values do not carry over from
+another shell), then `python -m tools.watsonx_summary .ratchet/runs/<run>/ledger.jsonl`.
 - [ ] **Step 8:** Fill the real numbers into `demo/README.md`. Commit ledger + numbers:
 `git add -A; git commit -m "demo: leg B recorded run with ledger"`
 
@@ -1747,12 +1779,18 @@ name via `customInstructions`), personas (`groups: [read]`, the key the 2.0.3 pa
 subagents (`allowedSubagents: [explore, code-reviewer, security-auditor, test-analyst]` — the allow-list also filters `.bob/agents/*`, observed fan-out), document understanding (`@`-mentioned
 DOCX), watsonx.ai (`/ml/v1/text/chat`, granite-4-h-small). Every claim uses the spec's honest wording (§2.2, §2.3).
 - [ ] `README.md`: what it is, the honest enforcement sentence, 60-second quickstart (trust the
-folder → `python -m rx init` → the `ratchet-spec` mode), the five modes, where the ledger lives, how to verify.
+folder → `python -m rx init --doc <requirements.docx>` → the `ratchet-spec` mode from the mode picker), the
+five modes, where the ledger lives, how to verify (`rx verify`, `rx report`, `.bob/settings.example.json` written by `rx init`).
 
 ---
 
 ### Task 19: Submit (Person C, **≥ 2 hours before deadline**)
 
+- [ ] **Step 0 — confirm the deadline and the repo (unowned until now).** Open the BeMyApp My Team page and
+record the exact deadline — spec §8 says Aug 30 10:00 ET, which is **Aug 30 22:00 SGT** on this machine
+(unconfirmed; if sources still disagree, take the earliest) — and whether a template repo is required; write
+both into hand-off §1. Decide whether `RVBCosme/IBM-Bob-Staging` is the submitted repo and flip it to Public in
+the GitHub web UI (Settings → Danger zone; `gh` is not installed here).
 - [ ] `git grep -iE "apikey|api_key|Bearer [A-Za-z0-9]" -- ':!docs' ':!tools/watsonx_summary.py'` → must return nothing.
 - [ ] Push to a **public** GitHub repo; open it in a private window; confirm `bob_sessions/` and `.ratchet/runs/` are present.
 - [ ] Submit video URL, both statements, repo URL on the My Team page. Read the AI Submission Advisor email; fix any "Needs a second look" and resubmit **all** deliverables.
