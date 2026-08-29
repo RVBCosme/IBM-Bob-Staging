@@ -1,0 +1,4 @@
+.env
+*.key
+secrets/
+.ratchet/runs/*/ledger.jsonl
