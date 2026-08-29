@@ -135,4 +135,12 @@ Open / unverified (report whatever happens):
 - Whether Bob's review verdict is PASS or REOPEN on leg B; whether Bobcoins suffice for A′ and a retake.
 - The "exported IBM Bob report" the platform's repo field mentions — the hackathon guide describes how to export a task session summary; Task 17 covers it with screenshots plus any export the IDE offers.
 
-Start by confirming the hard facts in §0 (`git log --oneline -1`, `git status --short`, `python -m rx verify`, local time vs 20:00 SGT), then hand the human driver pack §2 (Task 14) as the next step.
+**First action:** a second find→refute verification pass (`wf_6dd01dff-155`) over the corrected files was still
+running when this prompt was written. Its result, if it finished, is the JSON in
+`C:\Users\Rene Vincent\AppData\Local\Temp\claude\C--ratchet\0260ccbc-3878-4dd9-be0c-fba51cb333a6\tasks\wgw2u6yti.output`
+(key `result.kept`), with per-agent returns in
+`C:\Users\Rene Vincent\.claude\projects\C--ratchet\1f028e30-7eb2-4fb0-9bde-17f2cee3907a\subagents\workflows\wf_6dd01dff-155\journal.jsonl`.
+If it exists, apply every `kept` finding (each carries file, line, quote, source, fix), re-run §5, commit, mirror, push.
+If it does not exist, re-run the checks in §5 yourself and proceed.
+
+Then confirm the hard facts in §0 (`git log --oneline -1`, `git status --short`, `python -m rx verify`, local time vs 20:00 SGT), then hand the human driver pack §2 (Task 14) as the next step.
