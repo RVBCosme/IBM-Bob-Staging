@@ -12,4 +12,6 @@ Referee suite `referee/test_promo_acceptance.py` was authored before any run; it
 
 Fill with real numbers only. If B does not win, say so and say why.
 The one number the ledger proves deterministically is "Blocked calls" for leg B.
+Leg B's blocked calls come from the built-in Agent mode (e.g. `run pytest`): the phase modes refuse
+out-of-scope writes before the hook runs (`fileRegex` is enforced by Bob), which leaves no record.
 Everything else: n=1, single seed, nondeterministic model - an illustration, not a benchmark.

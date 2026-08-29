@@ -46,7 +46,7 @@ tool surface it did not choose, and every transition is recorded and machine-che
 | Layer | Mechanism | Sourced IBM wording |
 |---|---|---|
 | **WITHHOLD** | mode `groups` | *"If you omit groups, the mode does not get any grouped tools"*; *"Unknown group names do not grant access"* |
-| **DECLARE** | `fileRegex` on `edit` | *"Restrict which files a mode can edit"* — **stated as intent, never claimed as enforcement** |
+| **DECLARE** | `fileRegex` on `edit` | *"Restrict which files a mode can edit"* — enforced by Bob's edit-group validator **before** the hook runs (2.0.3 bundle; Smoke 11), so an in-mode out-of-phase write leaves no deny record; the hook covers everything the mode cannot |
 | **BLOCK** | `PreToolUse` hook, exit 2 | *"Exit code 2 prevents the tool from running. Bob reports the tool as blocked"* |
 | **AUDIT** | HMAC-chained ledger written by hooks + gate script | Records; cannot block (*exit 2 has no effect on `PostToolUse`/`Stop`*) |
 
@@ -55,7 +55,7 @@ tool surface it did not choose, and every transition is recorded and machine-che
 **Enforcement:**
 > No RATCHET phase mode holds the `execute`, `mode`, or `subtask` groups — IBM's rule is that
 > omitting a group means the mode does not get those tools — and a `PreToolUse` hook installed in
-> *global* settings, where folder trust cannot suspend it, exits 2 on every write falling outside
+> *global* settings, so no mode change can remove it, exits 2 on every write falling outside
 > the phase written on disk — and on every terminal command in every phase — so the block holds
 > even when the mode changes underneath it. We do not call this a sandbox: a person at the keyboard
 > can still switch modes, edit inline, or roll files back, and the reconciler catches those rather
@@ -161,7 +161,7 @@ C:\ratchet\                          <- NOT under OneDrive, NO spaces in path
 | 1 | `ratchet-spec` | `read`, `edit`(`^docs[\\/]specs[\\/].*\.md$`), `skill`, `todo` | No terminal; writes only specs |
 | 2 | `ratchet-red` | `read`, `edit`(`^tests[\\/].*`), `skill`, `todo` | Writes a failing test and **cannot run it** |
 | 3 | `ratchet-green` | `read`, `edit`(`^src[\\/].*`), `skill`, `todo` | Cannot reach `tests/`, so cannot pass by editing the test |
-| 4 | `ratchet-review` | `read`, `subagent`, `skill`, `todo`, `allowedSubagents: [explore]` | IBM's read-only Ask surface minus `mcp`/`mode`, plus `todo` |
+| 4 | `ratchet-review` | `read`, `subagent`, `skill`, `todo`, `allowedSubagents: [explore, code-reviewer, security-auditor, test-analyst]` | IBM's read-only Ask surface minus `mcp`/`mode`, plus `todo`. Bob applies the allow-list to built-in presets **and** `.bob/agents/*` together, so the three personas must be named or the mode cannot spawn them |
 | 5 | `ratchet-memory` | `read`, `edit`(`^memory[\\/].*`), `skill`, `todo` | Writes only memory |
 
 **Phase 0 (`init`) is not a mode.** A human runs `python -m rx init --doc <requirements>` in a
@@ -193,7 +193,8 @@ It therefore reads `.ratchet/state.json`.
 
 **All four hooks** (`PreToolUse` gate, `PostToolUse` record, `Stop` reconcile, `SessionStart`
 memory) are installed in **global** `~/.bob/settings/settings.json` by `rx-init` — global hooks
-*"always run"* and are *"unaffected by folder trust"*. Every hook has the same cwd guard: no
+*"always run"* for a trusted workspace (hooks respect workspace trust — changelog 2.0.2; trust is
+§7 row 1). Every hook has the same cwd guard: no
 `.ratchet/state.json` in the working directory → exit 0 immediately, so unrelated projects are never
 touched. The workspace `.bob/settings.json` is **not** used — one location, no double-firing.
 `.bob/settings.example.json` ships in the repo for judges to read.
@@ -414,9 +415,9 @@ command lines.
 | 6 | **Payload discovery** — exercise every write tool, `execute_command`, `spawn_subagent`; record exact `tool` strings and the path key | Must precede a line of `gate.py`. Commit the log |
 | 7 | Do skills load in a **custom** mode? | Fall back to `customInstructions` bodies |
 | 8 | Do all five modes load, do `/ratchet-*` appear? | One bad `fileRegex` kills all five silently |
-| 9 | `allowedSubagents: [explore]` loads | BRANCH → omit key, drop `subagent` |
+| 9 | `allowedSubagents: [explore, code-reviewer, security-auditor, test-analyst]` loads and `ratchet-review` can spawn `code-reviewer` | BRANCH → omit key, drop `subagent` |
 | 10 | Do hooks fire for subagent tool calls? | BRANCH → drop `subagent`; do not ship an audit hole |
-| 11 | `fileRegex`: enforced or advisory? | Informs DECLARE wording only — the hook carries the claim |
+| 11 | `fileRegex`: enforced or advisory? Pre-resolved from the 2.0.3 bundle: **enforced, before the hook** | In-mode out-of-phase writes leave no deny record, so leg B's blocked calls come from the built-in Agent mode; the hook still carries the claim |
 | 12 | Gate end-to-end **both directions** + deny record present | Non-negotiable |
 | 13 | Verifier PASS and FAIL (byte flip; deleted record → `seq` gap) | The money shot |
 | 14 | PDF `@`-mention returns text | PDF/DOCX only |

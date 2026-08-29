@@ -4,7 +4,8 @@
 **Evidence:** `probe.log` (session `448e42284ee101f74667a92307dfa1be`, 9 lines, one Agent-mode task), Bob's own task DB
 (`~/.bob/db/bob.db`), and Bob's hook runner in
 `…\Programs\IBM Bob\resources\app\extensions\bob-code\dist\extension.js` (function `runHooks`).
-IBM publishes no hooks reference page (the 2.0.2 changelog entry is the only mention), so the bundle is the spec.
+IBM's Lifecycle hooks page documents `event`/`tool`/`input`/`output`; the 2.0.3 bundle sends
+`hook_event_name`/`tool_name`/`tool_input`/`tool_response` — the bundle is the spec.
 
 ## 0. Verdict
 
@@ -197,9 +198,10 @@ Start a new Bob task (new chat) after each rewrite — the `SessionStart` line s
 
 ## Sources
 
-- `probe.log` (committed with this file) and `scratch/hello.txt` (final content `hello`).
+- `probe.log` (committed with this file) and `scratch/hello.txt` (final content `hello`; local only — `scratch/` is git-ignored).
 - `~/.bob/db/bob.db` — `tasks.env`, `tasks.approval_config`, `messages.data[].availableTools`, `toolUsage.permission`.
 - `…\IBM Bob\resources\app\extensions\bob-code\dist\extension.js` — `runHooks` / `HookLifecycle` (payload builders,
   `exec` options, exit-code switch).
-- https://bob.ibm.com/docs/ide/changelog (2.0.2 "Command lifecycle hooks"; 2.0.3 latest)
+- https://bob.ibm.com/docs/ide/changelog (2.0.2 "Command lifecycle hooks"; 2.0.2 "Lifecycle hooks now correctly respect the workspace trust setting"; 2.0.3 latest)
+- https://bob.ibm.com/docs/ide/configuration/lifecycle-hooks (documented payload `event`/`session_id`/`tool`/`input` + `output`; exit-code table; "Default timeout: 10 seconds"; "Global hooks always run" — says nothing about trust)
 - https://bob.ibm.com/docs/ide/core-concepts/tools (tool names by category)
