@@ -3,6 +3,7 @@ Env: WATSONX_APIKEY, WATSONX_PROJECT_ID. Never commit either."""
 import json
 import os
 import sys
+import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -37,7 +38,10 @@ def main(ledger_file):
     }
     req = urllib.request.Request(f"{URL}/ml/v1/text/chat?version=2024-03-14", data=json.dumps(body).encode(),
                                  headers={"Content-Type": "application/json", "Authorization": "Bearer " + iam_token(os.environ["WATSONX_APIKEY"])})
-    out = json.load(urllib.request.urlopen(req))
+    try:
+        out = json.load(urllib.request.urlopen(req))
+    except urllib.error.HTTPError as e:                      # watsonx explains 4xx in the body; show it, never the key
+        sys.exit(f"watsonx {e.code}: {e.read().decode()[:600]}")
     print(out["choices"][0]["message"]["content"])
 
 
