@@ -13,7 +13,8 @@
 > **Amendment 2026-08-29 (Task 4 pin, from `docs/specs/probe-findings.md`):** Bob IDE 2.0.3 sends
 > hook payloads keyed `hook_event_name` / `tool_name` / `tool_input` / `tool_response`, not the
 > `event` / `tool` / `input` / `output` shown on IBM's docs page and used in the code blocks of Tasks
-> 3, 5 and 7 below. The committed `rx/gate.py`, `rx/record.py`, their tests and `demo/canary/*.json`
+> 1, 3, 4 and 5 below (the canary fixtures, `rx/gate.py`, `rx/record.py` and their tests — those
+> six blocks are superseded by the files on disk; Task 7 only pipes the canary files). The committed `rx/gate.py`, `rx/record.py`, their tests and `demo/canary/*.json`
 > use the measured keys (documented keys accepted as fallback). Tool names and the `path` key were
 > confirmed as written. Treat the repo as authoritative over the code blocks in this file.
 
@@ -39,7 +40,7 @@ Hard ordering:
   cannot write any of them. That is the gate working; do not relax `policy.PROTECTED` to get around it.
 
 Repo location is **`C:\ratchet`** — no spaces, not under OneDrive (OneDrive locks will corrupt
-the append-only ledger; we hit an OneDrive lock while writing this plan).
+the append-structured ledger; we hit an OneDrive lock while writing this plan).
 
 ---
 
@@ -107,7 +108,9 @@ __pycache__/
 .env
 *.key
 secrets/
+scratch/
 ```
+(`scratch/` holds the hook probe's throwaway writes.)
 
 `.bobignore` (workspace root):
 ```
@@ -547,7 +550,7 @@ if __name__ == "__main__":
 - [ ] **Step 4: Run to verify it passes**
 
 Run: `python -m pytest rx_tests/test_gate.py -q`
-Expected: `7 passed`.
+Expected: `10 passed`.
 
 - [ ] **Step 5: Commit**
 
@@ -611,7 +614,7 @@ def test_non_ratchet_dir_exits_0(tmp_path):
 - [ ] **Step 3: Run**
 
 Run: `python -m pytest rx_tests/test_gate_stdin.py -q`
-Expected: `4 passed`. (`ensure_key` creates `%USERPROFILE%\.ratchet\key` once.)
+Expected: `5 passed`. (`ensure_key` creates `%USERPROFILE%\.ratchet\key` once.)
 
 - [ ] **Step 4: Commit**
 
@@ -751,8 +754,12 @@ def main():
         if not state_file.exists():
             return 0
         s = json.loads(state_file.read_text(encoding="utf-8"))
-        print(f"RATCHET run {s['run']} is in phase '{s['phase']}'. Work only inside /ratchet-{s['phase']}; "
-              f"writes outside this phase's directory and all terminal commands are blocked and recorded.")
+        if s["phase"] == "done":
+            print(f"RATCHET run {s['run']} is done: every write is blocked until a new `python -m rx init`.")
+        else:
+            print(f"RATCHET run {s['run']} is in phase '{s['phase']}'. Work only in the ratchet-{s['phase']} mode; "
+                  f"writes outside this phase's directory are refused by the mode, anything that still reaches "
+                  f"the hook outside it and every terminal command is blocked and recorded.")
         idx = root / "memory" / "INDEX.md"
         if idx.exists():
             print("\nMEMORY INDEX from previous sessions:\n" + idx.read_text(encoding="utf-8")[:2048])
@@ -1008,7 +1015,7 @@ if __name__ == "__main__":
 - [ ] **Step 4: Run to verify it passes**
 
 Run: `python -m pytest rx_tests -q`
-Expected: all tests pass (`6 + 7 + 4 + 4 + 4 = 25 passed`).
+Expected: all tests pass (`6 + 10 + 5 + 4 + 5 = 30 passed`).
 
 - [ ] **Step 5: Commit**
 
@@ -1035,7 +1042,7 @@ Expected: four hook entries pointing at `C:\ratchet\.bob\hooks\*.cmd`. The probe
 **Commit immediately after every `rx init` and after every human edit during a run** — the Stop
 hook reconciles `git status` against the ledger, and any uncommitted human change shows up as an
 unrecorded write and fails `rx verify`.
-**From here on the gate is live.** Tasks 8, 10 and 11 must already be done: `.bob/**` is protected
+**From here on the gate is live.** Tasks 8, 10 and Task 11 Steps 1–3 must already be committed (Task 11 Step 4 runs after Step 5 of this task): `.bob/**` is protected
 and `AGENTS.md` is outside every phase's scope, so Bob can no longer author them. To edit `.bob/`
 or a root file from inside Bob later: `Rename-Item .ratchet\state.json state.json.off`, edit,
 rename back, commit (every hook exits 0 while `state.json` is absent — same switch as Task 14).
@@ -1192,7 +1199,7 @@ Full text: .bob/skills/ratchet-spec/karpathy.md
 # RATCHET protocol
 - This workspace is a RATCHET run. The current phase is in .ratchet/state.json and is announced at session start.
 - Only the human opens gates, with `python -m rx gate --to <phase>`. Never ask to switch modes yourself.
-- Writes outside the phase directory and all terminal commands are blocked by a hook and recorded in the ledger. Do not retry a blocked call; tell the human why you needed it.
+- Writes outside the phase directory are refused by the mode's file restriction. Any write that still reaches the hook outside the phase directory, and every terminal command, is blocked by the hook and recorded in the ledger. Do not retry a refused or blocked call; tell the human why you needed it.
 - Never edit .ratchet/ or .bob/.
 - When the phase's work is done, stop and print the exact gate command the human should run.
 ```
@@ -1214,8 +1221,8 @@ Green phase: the smallest change under src/ that makes the current red test pass
 # RATCHET workspace
 
 This repository is governed by RATCHET: five phase modes (ratchet-spec, ratchet-red, ratchet-green,
-ratchet-review, ratchet-memory), a PreToolUse hook that blocks out-of-phase writes and all terminal
-commands, and an HMAC-chained ledger in .ratchet/runs/. Humans open gates with `python -m rx gate`.
+ratchet-review, ratchet-memory) whose edit scope Bob restricts by fileRegex, a PreToolUse hook that
+blocks every terminal command and any out-of-phase write that reaches it, and an HMAC-chained ledger in .ratchet/runs/. Humans open gates with `python -m rx gate`.
 
 ## Memory (a RATCHET convention, not a Bob feature)
 - `memory/INDEX.md` is the index: one line per note, `- [Title](file.md) - one-line hook`.
@@ -1228,8 +1235,9 @@ commands, and an HMAC-chained ledger in .ratchet/runs/. Humans open gates with `
   enforcement layer (never edit during a run) - `referee/` hidden acceptance tests (do not read).
 ```
 
-- [ ] **Step 6: Smoke 8.** Settings → Modes: all five listed. Type `/ratchet-` in chat: five
-completions appear. Screenshot → `bob_sessions/A/smoke-8.png`. If a mode is missing, a `fileRegex`
+- [ ] **Step 6: Smoke 8.** Settings → Modes: all five listed in the mode picker. Type `/ratchet-` in
+chat: six completions appear, every one with source *skill* — Bob 2.0.3 builds no slash command from
+a mode, so phase entry is the picker, never `/ratchet-<phase>`. Screenshot → `bob_sessions/A/smoke-8.png`. If a mode is missing, a `fileRegex`
 failed to parse — fix and reload. (Smoke 7, skills, is Task 10 Step 7.)
 
 - [ ] **Step 7: Commit** `git add -A; git commit -m "feat(bob): five phase modes, rules, router"`
@@ -1257,7 +1265,7 @@ failed to parse — fix and reload. (Smoke 7, skills, is Task 10 Step 7.)
 
 ### Task 10: The six skills (Person A, inside Bob IDE)
 
-Each `SKILL.md` needs `name` and `description` — a skill without a description is **silently ignored**.
+Each `SKILL.md` needs `name` and `description`; the directory name must match `^[a-z0-9]+(-[a-z0-9]+)*$` (an invalid name is skipped silently; a missing description falls back to the first body line — Bob 2.0.3 `parseSkillFile`).
 
 - [ ] **Step 1: `.bob/skills/ratchet-spec/SKILL.md`**
 
@@ -1364,7 +1372,7 @@ for the requirements document. Screenshot → `bob_sessions/A/smoke-7.png`.
 
 All `tools: [read]` — the documented read-only form and *"a ceiling, not a grant"* — **and** a `groups:` list holding only `read`: build 2.0.3's persona parser reads `groups:` (absent → `read, edit, execute`) and ignores `tools:`, so both are set. Keep the block-list form — the parser is line-based and would read a flow list as a string. Do not claim on camera that a persona is read-only by declaration; the hook carries the claim.
 
-- [ ] `.bob/agents/code-reviewer.md`
+- [ ] **Step 1:** `.bob/agents/code-reviewer.md`
 ```markdown
 ---
 name: code-reviewer
@@ -1380,7 +1388,7 @@ Flag anything that is more code than the spec requires (Simplicity First) and an
 Describe issues only. Do not propose patches. List files with no findings as clean.
 ```
 
-- [ ] `.bob/agents/security-auditor.md`
+- [ ] **Step 2:** `.bob/agents/security-auditor.md`
 ```markdown
 ---
 name: security-auditor
@@ -1396,7 +1404,7 @@ Cover: untrusted input reaching arithmetic or I/O, negative or overflow values, 
 Describe issues only. Do not propose patches.
 ```
 
-- [ ] `.bob/agents/test-analyst.md`
+- [ ] **Step 3:** `.bob/agents/test-analyst.md`
 ```markdown
 ---
 name: test-analyst
@@ -1411,7 +1419,9 @@ Report a table: Spec bullet / task | Test | Covered? | Gap.
 A test that cannot fail (asserts True, asserts the implementation's own output) is not coverage.
 ```
 
-- [ ] **Step 4: Smoke 10 + 11 — the only test of a custom mode before the recorded take.**
+- [ ] **Commit (Steps 1–3, before Task 7):** `git add .bob/agents; git commit -m "feat(bob): three read-only personas (groups: read per Bob 2.0.3 parser)"` (done: `b318e5d`)
+
+- [ ] **Step 4: Smoke 9 + 10 + 11 — the only test of a custom mode before the recorded take.**
 Runs **after Task 7 Step 5** (Steps 1–3 of this task are committed before Task 7). Set the
 throwaway run's phase to green by hand:
 `python -c "import json,pathlib; p=pathlib.Path('.ratchet/state.json'); s=json.loads(p.read_text()); s['phase']='green'; p.write_text(json.dumps(s))"`.
@@ -1420,25 +1430,27 @@ validator tests `fileRegex` against the raw `path` argument and cancels the call
 the model **before** `PreToolUse` runs, so `fileRegex` is *enforced* and an in-mode out-of-phase
 write produces **no deny record**. Consequence, already decided: leg B's blocked calls on camera
 come from the built-in Agent mode (`run pytest` → `execute_command` blocked and recorded), and
-`demo/README.md` says so. In `/ratchet-green`: (a) ask Bob to write `docs/specs/x.md` — expect a
+`demo/README.md` says so. In the `ratchet-green` mode: (a) ask Bob to write `docs/specs/x.md` — expect a
 mode-level file-restriction message and **no** new line in `python -m rx report`; a `RATCHET
 blocked` message plus a deny record instead would mean the bundle changed — revisit spec §2.1.
 (b) ask Bob to write `src/a.py` — expect **success**; if the mode refuses, `fileRegex` is matching
 absolute paths: anchor every pattern to the repo folder instead of dropping the `^`
 (`(^|[\\/]ratchet[\\/])src[\\/].*`, likewise for the other three — a bare `tests[\\/].*` would
 also match `referee/tests/` and `rx_tests/`) and repeat (b).
+**Smoke 9.** In the `ratchet-review` mode prompt `Use the code-reviewer persona to list the files under src/`;
+expect a spawn, not `Subagent name "code-reviewer" is not allowed in this mode`. Needs no hook.
 **Smoke 10.** The live gate records only denies and `rx report` prints gate/deny rows, so a
 subagent's *reads* leave no trace once the probe hooks are gone. Either run Smoke 10 **before
 Task 7** with the probe config (probe-findings §7 — preferred when the IDE is open before then), or
 after Task 7 add `C:\ratchet\.bob\hooks\probe.cmd` as a **second** `PreToolUse` entry (hooks run
-sequentially) and read `probe.log`: in `/ratchet-review` prompt `Use the code-reviewer persona to
+sequentially) and read `probe.log`: in the `ratchet-review` mode prompt `Use the code-reviewer persona to
 review src/`; confirm `probe.log` shows `PreToolUse` lines for the subagent's reads. If none, apply
 the Fallbacks row (drop `subagent`, sequential personas). Remove the extra entry afterwards.
 Clean up: `git checkout -- src docs .ratchet/state.json; git clean -fd src docs` — **never
 `git checkout -- .`**: it reverts the tracked ledger, which Task 7 Step 4 forbids.
 Screenshot → `bob_sessions/A/smoke-10-11.png`.
 
-- [ ] Commit: `git add -A; git commit -m "feat(bob): read-only reviewer personas"`
+- [ ] Commit (after Step 4): `git add bob_sessions/A/smoke-10-11.png; git commit -m "docs(bob): smoke 9-11 evidence"`
 
 ---
 
@@ -1538,11 +1550,12 @@ discount exceeds the subtotal. That is the trap.
 
 Same repo commit (`ab-start`), same requirements document, same machine, same model.
 Referee suite `referee/test_promo_acceptance.py` was authored before any run; its SHA-256 is in
-`referee/SHA256.txt`. Neither run can see it (`.bobignore`).
+`referee/SHA256.txt`. Bob's file tools cannot see it in either run (`.bobignore`); leg A also holds a
+terminal, so its transcript is checked for any `referee` access.
 
 | Leg | What ran | Referee | Minutes | Bobcoins | Files touched | Blocked calls |
 |-----|----------|---------|---------|----------|---------------|---------------|
-| A   | Default Agent mode, one prompt | /8 | | | | n/a |
+| A   | Default Agent mode, one prompt (hooks, rules and router removed) | /8 | | | | n/a |
 | A'  | A + one repair prompt with the referee failure pasted in | /8 | | | | n/a |
 | B   | RATCHET gates | /8 | | | | |
 
@@ -1661,7 +1674,8 @@ Confirm `.ratchet\state.json` is back (it is tracked on `main`).
 ### Task 15: Leg B — the recorded RATCHET run (Person A drives, Person C records)
 
 Pre-flight, on camera: `/permissions` trust shown; Auto-Approve for Read, Skill, Subagent enabled
-and **narrated**. Re-run Task 7 Step 2 canary first (mandatory after any settings change).
+and **narrated**. Re-run the Task 7 Step 2 canary first (mandatory before every take); if `settings.json` changed
+since Task 7, also re-run Smoke 12 in Bob once (spec §7 footer).
 
 - [ ] **Step 0:** Nobody but Person A touches the `C:\ratchet` working tree while leg B runs.
 Tasks 13, 16 and 18 finish before Step 1 or happen in a second clone. Any human edit during the run
@@ -1669,18 +1683,18 @@ is committed immediately, or the next Stop records it as unrecorded and the run 
 - [ ] **Step 1:** On `main`: `python -m rx init --doc demo/SHOP-412.docx; git add -A; git commit -m "demo: leg B run started"` → phase `spec`.
 Start a **new Bob task (+)** for each phase so the skill loads fresh and the SessionStart hook
 re-announces the phase; continuity lives on disk, not in the chat.
-- [ ] **Step 2 — spec:** switch to `/ratchet-spec`, prompt: `Spec @/demo/SHOP-412.docx`.
+- [ ] **Step 2 — spec:** pick the `1 - Ratchet Spec` mode, prompt: `Spec @/demo/SHOP-412.docx`.
 Expected beat: Bob asks *"what happens when the discount exceeds the subtotal?"* Answer: `Never below zero.`
 Then `python -m rx gate --to red`.
-- [ ] **Step 3 — red/green loop** per plan task: `/ratchet-red` → `Next task` → `gate --to green` →
-`/ratchet-green` → `Next task` → `gate --to red` … until plan is done, then `gate --to review`.
+- [ ] **Step 3 — red/green loop** per plan task: `ratchet-red` mode → `Next task` → `gate --to green` →
+`ratchet-green` mode → `Next task` → `gate --to red` … until plan is done, then `gate --to review`.
 Somewhere in green, prompt once: `Also add a test for this.` Expected beat: the **mode** refuses
 (`fileRegex` is enforced before the hook — no record). For the recorded **blocked** beat, switch to
 the built-in Agent mode once and prompt `run pytest`: the gate blocks `execute_command` and
 `rx report` shows the deny (spec §2.1, Task 11 Step 4).
-- [ ] **Step 4 — review:** `/ratchet-review` → `Review the change`. Expect the parallel-subagents
+- [ ] **Step 4 — review:** `ratchet-review` mode → `Review the change`. Expect the parallel-subagents
 panel if Bob fans out (do not promise it). Then `gate --to memory`.
-- [ ] **Step 5 — memory:** `/ratchet-memory` → `Record what we learned` → `gate --to done`.
+- [ ] **Step 5 — memory:** `ratchet-memory` mode → `Record what we learned` → `gate --to done`.
 - [ ] **Step 6:** `python -m rx verify` (PASS — note the record count). `Copy-Item` the ledger to
 `$env:TEMP\ledger.bak`, tamper one byte with a token that occurs in *this* ledger (e.g.
 `-replace 'SAVE20','SAVE21'`), `verify` (FAIL), `Move-Item -Force` it back, `verify` (PASS, same
@@ -1700,9 +1714,9 @@ record `passed/8`.
 0:00-0:25  Problem. "Agents write code for free; the cost moved to trusting it. Prompts ask. Nobody checks."
 0:25-0:45  Karpathy slide: four principles. "Everyone agrees. Nobody can prove they were followed."
 0:45-1:05  Leg A result as STILLS (legs A/A' are run unrecorded): the shipped promo.py with
-           `total = subtotal - discount`, then `python -m pytest referee -q` -> 7/8 with
-           `test_total_never_negative FAILED` on screen.
-1:05-2:25  Leg B on screen: spec asks the question -> red test -> green -> blocked write (ledger line) ->
+           `total = subtotal - discount`, then `python -m pytest referee -q` -> <passed>/8 with the
+           failing test name on screen (real numbers from demo/README.md after Task 14; if A passes 8/8, show that).
+1:05-2:25  Leg B on screen: spec asks the question -> red test -> green -> mode refuses a test write (no record) -> Agent-mode `run pytest` blocked (ledger line) ->
            review persona table -> memory -> `rx verify` PASS, tamper, FAIL.
 2:25-2:45  Receipt table A / A' / B. "N blocked calls" is the number the ledger proves.
 2:45-3:00  How Bob was used: modes, skills, personas, hooks, subagents. All config, in the repo.
@@ -1726,14 +1740,14 @@ markdown if the IDE offers export.
 ### Task 18: Write-ups (Person C)
 
 - [ ] `docs/submission/problem-solution.md` (≤500 words): problem (§1 of spec), target user, what
-RATCHET is (four layers, one sentence each), how a developer uses it (the five slash commands and
+RATCHET is (four layers, one sentence each), how a developer uses it (the five phase modes and
 `rx gate`), why it is different (§3), the measured result (real A/A′/B numbers, N blocked calls).
 - [ ] `docs/submission/bob-usage.md`: custom modes (path, groups, `fileRegex`), skills (six, loaded by
-name via `customInstructions`), personas (`tools: [read]`), lifecycle hooks (which events, exit 2),
+name via `customInstructions`), personas (`groups: [read]`, the key the 2.0.3 parser reads; `tools: [read]` kept as the documented form; the read-only claim is carried by the hook), lifecycle hooks (which events, exit 2),
 subagents (`allowedSubagents: [explore, code-reviewer, security-auditor, test-analyst]` — the allow-list also filters `.bob/agents/*`, observed fan-out), document understanding (`@`-mentioned
 DOCX), watsonx.ai (`/ml/v1/text/chat`, granite-4-h-small). Every claim uses the spec's honest wording (§2.2, §2.3).
 - [ ] `README.md`: what it is, the honest enforcement sentence, 60-second quickstart (trust the
-folder → `python -m rx init` → `/ratchet-spec`), the five commands, where the ledger lives, how to verify.
+folder → `python -m rx init` → the `ratchet-spec` mode), the five modes, where the ledger lives, how to verify.
 
 ---
 
@@ -1751,7 +1765,7 @@ folder → `python -m rx init` → `/ratchet-spec`), the five commands, where th
 |---|---|
 | Smoke 2 fails (no hooks) | Ship WITHHOLD + DECLARE + human-run `rx gate`/`verify`; ledger written by `rx gate` only; say so plainly |
 | Smoke 7 fails (skills don't load in custom modes) | Move each SKILL.md body into that mode's `customInstructions` |
-| Smoke 9 (Task 8 Step 6) or smoke 10 (Task 11 Step 4) fails | `ratchet-review` groups → `[read, skill, todo]`; run the three personas as sequential prompts; do not ship an audit hole |
+| Smoke 9 or 10 (Task 11 Step 4) fails | `ratchet-review` groups → `[read, skill, todo]`; run the three personas as sequential prompts; do not ship an audit hole |
 | Smoke 11(b) fails — mode cannot write `src/` | `fileRegex` is matching absolute paths; anchor every pattern to the repo folder (`(^|[\\/]ratchet[\\/])src[\\/].*`) — do **not** drop the `^`: an unanchored `tests[\\/].*` also matches `referee/tests/` and `rx_tests/` |
 | Bobcoins < 40% remaining before leg B | Skip leg A′; run leg B once; no retakes |
 | watsonx not working in 90 min | Cut it; remove from usage statement |

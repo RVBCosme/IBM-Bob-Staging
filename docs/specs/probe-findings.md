@@ -18,9 +18,9 @@ IBM's Lifecycle hooks page documents `event`/`tool`/`input`/`output`; the 2.0.3 
 | 5 failure mode | **GREEN — fails OPEN** | Missing script → 1, uncaught exception → 1, missing interpreter → 3, timeout → `null`; every one is ignored by Bob (§4, §5) |
 | 6 tool vocabulary | **GREEN** | §2. Subagent tool is `spawn_subagent` (advertised; not yet observed through a hook — §7) |
 
-**One blocking finding (§6): the payload keys are `hook_event_name` / `tool_name` / `tool_input`, not
-`event` / `tool` / `input`. As committed, `rx/gate.py` denies every tool call as "malformed payload" and
-`rx/record.py` records nothing. Fix before Task 7.**
+**One blocking finding (§6) — RESOLVED in `07cfa8b` (Task 4), kept here as the measurement: the payload keys
+are `hook_event_name` / `tool_name` / `tool_input`, not `event` / `tool` / `input`. As first committed,
+`rx/gate.py` denied every tool call as "malformed payload" and `rx/record.py` recorded nothing. Fixed before Task 7.**
 
 ## 1. Payload schema — exact keys per event
 
@@ -86,7 +86,8 @@ EXEC_TOOLS  = {"execute_command"}                                               
 PATH_KEYS   = ("path",)                                                             # confirmed for write_file, apply_diff
 ```
 
-The values already in `rx/policy.py` are correct. **The keys read in `rx/gate.py` and `rx/record.py` are not** (§6).
+The values already in `rx/policy.py` are correct. The keys first read in `rx/gate.py` and `rx/record.py` were not (§6) —
+corrected in `07cfa8b` (Task 4).
 
 ## 3. Path shape
 
@@ -105,7 +106,7 @@ JSON payload to stdin and waits for exit.
 
 | Hook exit | `PreToolUse` / `UserPromptSubmit` | `SessionStart` / `PostToolUse` / `Stop` |
 |---|---|---|
-| `0` | allowed; trimmed stdout becomes `additionalContext` (SessionStart / UserPromptSubmit inject it into the model's context) | same |
+| `0` | allowed. PreToolUse stdout is ignored; only `UserPromptSubmit` injects trimmed stdout as `additionalContext` | `SessionStart` injects trimmed stdout as `additionalContext`; PostToolUse / Stop ignore it |
 | `2` | **BLOCKED.** Reason shown to the model = `stderr.trim() \|\| stdout.trim() \|\| "<event> blocked by hook"`. PreToolUse → tool call cancelled with that note; UserPromptSubmit → `UserPromptHookError "Prompt blocked by hook"` | logged "hooks cannot block", **ignored** |
 | any other (`1`, `3`, …) | logged "hook exited with code N", **ignored → fails open** | ignored |
 | `null` (spawn failure, **timeout**, killed) | logged "hook failed", **ignored → fails open** | ignored |
@@ -134,7 +135,7 @@ global only, as the spec requires. Changelog 2.0.2: hooks respect workspace trus
 Same conclusion the plan predicted: **a missing or crashing gate fails open.** The pre-take checklist (Task 7
 Step 2) must assert `gate.cmd` exists and the deny canary returns 2 before every recording.
 
-## 6. BLOCKING: `rx/gate.py` and `rx/record.py` read the wrong keys
+## 6. BLOCKING (resolved in `07cfa8b`, Task 4): `rx/gate.py` and `rx/record.py` read the wrong keys
 
 Both modules (and the plan text they were pasted from) read `payload["tool"]`, `payload["input"]`,
 `payload["event"]`. Bob sends `tool_name`, `tool_input`, `hook_event_name`. Run against the real captured
@@ -162,7 +163,7 @@ ledger never records a write or a stop — the opposite of the block-list design
 4. `demo/canary/deny.json`, `allow.json` —
    `{"session_id":"canary","cwd":"c:\\ratchet","hook_event_name":"PreToolUse","tool_name":"write_file","tool_input":{"path":"src/x.py","content":"","line_count":0},"tool_use_id":"canary"}`
    (and `docs/specs/x.md` for allow).
-5. Spec §4.3 first sentence (`{event, session_id, tool, input}`) and plan Task 3/5/7 fixture text — correct to the
+5. Spec §4.3 first sentence (`{event, session_id, tool, input}`) and plan Task 1/3/4/5 fixture text — correct to the
    §1 schema. Ledger record keys (`"event":"deny"` etc.) are RATCHET's own and stay as they are.
 
 ## 7. Still to confirm inside Bob (cannot be done from outside the IDE)
