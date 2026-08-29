@@ -1,1 +1,1 @@
-{"event":"PreToolUse","tool":"write_file","input":{"path":"src/x.py","content":""}}
+{"session_id": "canary", "cwd": "c:\\ratchet", "hook_event_name": "PreToolUse", "tool_name": "write_file", "tool_input": {"path": "src/x.py", "content": "", "line_count": 0}, "tool_use_id": "canary"}

@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from rx import ledger, policy
-from rx.gate import rel_to
+from rx.gate import event_of, input_of, rel_to, tool_of
 
 IGNORE = (".ratchet/", "bob_sessions/", "probe.log")
 
@@ -26,12 +26,13 @@ def main():
         state = json.loads(state_file.read_text(encoding="utf-8"))
         lp = root / ".ratchet" / "runs" / state["run"] / "ledger.jsonl"
         p = json.loads(sys.stdin.buffer.read().decode("utf-8-sig"))
-        if p.get("event") == "PostToolUse" and p.get("tool") in policy.WRITE_TOOLS:
-            inp = p.get("input") or {}
+        event, tool = event_of(p), tool_of(p)
+        if event == "PostToolUse" and tool in policy.WRITE_TOOLS:
+            inp = input_of(p)
             raw = next((inp[k] for k in policy.PATH_KEYS if isinstance(inp.get(k), str) and inp[k]), None)
             if raw:
-                ledger.append(lp, {"event": "write", "phase": state["phase"], "tool": p["tool"], "path": rel_to(root, raw) or "?"})
-        elif p.get("event") == "Stop":
+                ledger.append(lp, {"event": "write", "phase": state["phase"], "tool": tool, "path": rel_to(root, raw) or "?"})
+        elif event == "Stop":
             recorded = {r["path"] for r in ledger.read(lp) if r["event"] == "write"}
             changed = [f for f in changed_files(root) if not f.startswith(IGNORE)]
             ledger.append(lp, {"event": "stop", "phase": state["phase"], "changed": changed,

@@ -10,6 +10,13 @@
 
 **Spec:** `docs/superpowers/specs/2026-08-29-ratchet-design.md` — read §4.3 and §7 before starting.
 
+> **Amendment 2026-08-29 (Task 4 pin, from `docs/specs/probe-findings.md`):** Bob IDE 2.0.3 sends
+> hook payloads keyed `hook_event_name` / `tool_name` / `tool_input` / `tool_response`, not the
+> `event` / `tool` / `input` / `output` shown on IBM's docs page and used in the code blocks of Tasks
+> 3, 5 and 7 below. The committed `rx/gate.py`, `rx/record.py`, their tests and `demo/canary/*.json`
+> use the measured keys (documented keys accepted as fallback). Tool names and the `path` key were
+> confirmed as written. Treat the repo as authoritative over the code blocks in this file.
+
 **Governing rule for this build (Karpathy §2):** minimum code that solves the problem. Every file
 below is complete as written. Do not add configurability, abstractions, or error handling for
 scenarios that cannot occur. If a script grows past ~150 lines, stop and simplify.

@@ -6,6 +6,20 @@ from pathlib import Path
 from rx import ledger, policy
 
 
+# Bob 2.0.3 sends hook_event_name / tool_name / tool_input (measured in probe.log, 2026-08-29).
+# IBM's docs page shows event / tool / input. Accept both; the build wins.
+def event_of(p):
+    return p.get("hook_event_name", p.get("event"))
+
+
+def tool_of(p):
+    return p.get("tool_name", p.get("tool"))
+
+
+def input_of(p):
+    return p.get("tool_input", p.get("input")) or {}
+
+
 def rel_to(root, path):
     """Workspace-relative POSIX path, or None if the path escapes the workspace."""
     p = Path(path)
@@ -17,14 +31,14 @@ def rel_to(root, path):
 
 def decide(payload, phase, root):
     """Return (allow, reason, rel_path)."""
-    tool = payload.get("tool")
+    tool = tool_of(payload)
     if not isinstance(tool, str):
         return False, "malformed payload", ""
     if tool in policy.EXEC_TOOLS:
         return False, "terminal commands are blocked in every phase", ""
     if tool not in policy.WRITE_TOOLS:
         return True, "not a write tool", ""
-    inp = payload.get("input") or {}
+    inp = input_of(payload)
     path = next((inp[k] for k in policy.PATH_KEYS if isinstance(inp.get(k), str)), None)
     if not path:
         return False, "no path in payload", ""
@@ -54,10 +68,10 @@ def main():
         allow, reason, rel = decide(payload, state["phase"], root)
         if allow:
             return 0
+        tool = tool_of(payload)
         ledger.append(root / ".ratchet" / "runs" / state["run"] / "ledger.jsonl",
-                      {"event": "deny", "phase": state["phase"], "tool": payload.get("tool"),
-                       "path": rel, "reason": reason})
-        print(f"RATCHET blocked {payload.get('tool')} on {rel or '-'}: {reason}", file=sys.stderr)
+                      {"event": "deny", "phase": state["phase"], "tool": tool, "path": rel, "reason": reason})
+        print(f"RATCHET blocked {tool} on {rel or '-'}: {reason}", file=sys.stderr)
         return 2
     except BaseException:
         return 2

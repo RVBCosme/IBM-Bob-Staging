@@ -184,9 +184,12 @@ because `use_skill` is strong instruction, not enforcement.
 
 ### 4.3 The gate hook
 
-`PreToolUse` stdin is exactly `{event, session_id, tool, input}` — **there is no `mode` field**, so
-the hook physically cannot learn which mode is running. It therefore reads
-`.ratchet/state.json`.
+`PreToolUse` stdin, **as measured on Bob IDE 2.0.3** (`probe.log`, 2026-08-29), is
+`{session_id, cwd, hook_event_name, tool_name, tool_input, tool_use_id}`; `PostToolUse` adds
+`tool_response` (a string). IBM's docs page shows `{event, session_id, tool, input}` — the build
+disagrees with the page, so `rx/gate.py` reads the measured keys and accepts the documented ones as
+a fallback. **There is no `mode` field**, so the hook physically cannot learn which mode is running.
+It therefore reads `.ratchet/state.json`.
 
 **All four hooks** (`PreToolUse` gate, `PostToolUse` record, `Stop` reconcile, `SessionStart`
 memory) are installed in **global** `~/.bob/settings/settings.json` by `rx-init` — global hooks
