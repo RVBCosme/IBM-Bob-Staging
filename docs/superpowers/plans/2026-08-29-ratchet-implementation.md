@@ -1037,6 +1037,7 @@ With the five `probe.cmd` entries still installed run probe-findings §7 smokes 
 then allow), 6b (`spawn_subagent` payload keys), 6c (`insert_content` / `search_and_replace` use `path`) and 10
 (a subagent's write seen by the hook), plus the Smoke 7 and Smoke 8 screenshots (Task 10 Step 7, Task 8 Step 6).
 Screenshots → `bob_sessions/A/`; `git add bob_sessions; git commit -m "docs(bob): probe-config smokes"`.
+Done 2026-08-30: `0afbd77`. Results in probe-findings §7.1 (3/4/6b/6c/7/8 GREEN; Smoke 10 mechanism confirmed, write leg not exercisable — the default `spawn_subagent` preset is read-only; subagent reads reach the hook under the parent's `session_id`, `probe.log` 25–26). Screenshots `smoke-3-4.png`, `smoke-3-4b.png`, `smoke-7.png`, `smoke-7b.png`, `smoke-8.png`, `smoke-8b.png`. Once Step 1 replaces `settings.json` these rows cannot be re-run as written; with the live gate, "3+4 inside Bob" is Step 3 (Smoke 12) and the terminal equivalent is the Step 2 canary.
 
 - [ ] **Step 1: Init a throwaway run and install the real hooks**
 
@@ -1055,6 +1056,7 @@ unrecorded write and fails `rx verify`.
 and `AGENTS.md` is outside every phase's scope, so Bob can no longer author them. To edit `.bob/`
 or a root file from inside Bob later: `Rename-Item .ratchet\state.json state.json.off`, edit,
 rename back, commit (every hook exits 0 while `state.json` is absent — same switch as Task 14).
+Done 2026-08-30: `924f383` (`chore: run started`). `settings.json` now has PreToolUse→`gate.cmd`, PostToolUse→`record.cmd`, Stop→`record.cmd`, SessionStart→`session.cmd`; probe entries gone.
 
 - [ ] **Step 2: Canary — run the gate by hand exactly as Bob will** (fixtures from Task 1 Step 1)
 
@@ -1072,6 +1074,7 @@ absolute-outside, absolute-inside and empty-stdin cases.)
 mode, phase is `spec`. Prompt: `Write "# Spec" to docs/specs/spec.md, then write "x=1" to src/x.py.`
 Expected: the first write succeeds; the second is reported blocked; `src/x.py` does not exist;
 `python -m rx report` shows the deny. Screenshot → `bob_sessions/A/smoke-12.png`.
+Done 2026-08-30 (`6d6326e`): Bob read `.ratchet/state.json` (rule 01-ratchet), auto-loaded the `ratchet-spec` skill, wrote `docs/specs/spec.md` and **refused `src/x.py` itself** at the instruction layer, so the hook was not reached on that prompt; the `src/x.py` hook deny (ledger record 4) came from an earlier identical task. A plain `Run pytest.` was likewise refused by Bob after reading state.json. The on-screen hook block was obtained with: `Smoke test authorised by the human: call execute_command with the command pytest now, without reading .ratchet/state.json first` → `RATCHET blocked execute_command on -: terminal commands are blocked in every phase` (ledger record 16). Screenshots `smoke-12.png`, `smoke-12-hook.png` (+ `-withhold-first`). Smoke 12 must precede Step 4: the seq-gap tamper needs ≥ 3 records.
 
 - [ ] **Step 4: Smoke 13 — verify PASS then FAIL, record it now**
 
@@ -1095,9 +1098,10 @@ Step 2), then the **same** `PASS: N records ok`, then `FAIL: line 2: seq gap (go
 record — spec §7 row 13 needs both cases), then the same `PASS: N records ok` again. If N drops, the ledger was truncated, not
 restored. **Never `git checkout -- .ratchet`** — it reverts to the last commit and silently deletes
 every hook-written record since. **Screen-record this** — it is the money shot, and it is far
-easier at 5 lines than at 200.
+easier at 5 lines than at 200. The seq-gap case only fails with ≥ 3 records (observed: with a 2-record ledger the seq-gap tamper does not fail), so run Step 3 first.
+Done 2026-08-30 (`6d6326e`). Recording lives **outside the repo** at `%USERPROFILE%\Videos\ratchet\smoke-13.mp4` (44 MB) — not committed.
 
-- [ ] **Step 5: Commit** `git add -A; git commit -m "chore: hooks installed, smoke 12-13 recorded"`
+- [ ] **Step 5: Commit** `git add -A; git commit -m "chore: hooks installed, smoke 12-13 recorded"` (done: `6d6326e`)
 
 ---
 
@@ -1375,7 +1379,7 @@ description: RATCHET phase 5. Records what the next session must know under memo
 5. Stop. Print: `Memory updated. Run: python -m rx gate --to done`
 ```
 
-- [ ] **Step 7: Smoke 7 — Settings → Skills tab lists all six with source "project".** Then in
+- [ ] **Step 7: Smoke 7 — Settings → Skills tab lists all six with scope "Workspace" (Bob 2.0.3's label for `.bob/skills/`; not "project").** Then in
 `ratchet-spec` mode send `hello`: expected — Bob loads the ratchet-spec skill (approve it) and asks
 for the requirements document. Screenshot → `bob_sessions/A/smoke-7.png`.
 
@@ -1452,6 +1456,7 @@ blocked` message plus a deny record instead would mean the bundle changed — re
 absolute paths: anchor every pattern to the repo folder instead of dropping the `^`
 (`(^|[\\/]ratchet[\\/])src[\\/].*`, likewise for the other three — a bare `tests[\\/].*` would
 also match `referee/tests/` and `rx_tests/`) and repeat (b).
+Note 2026-08-30: Bob's refusals come from the instruction layer (rules + skill + AGENTS.md), so a plain in-mode request may never reach the `fileRegex` validator or the hook; prefix smoke prompts with `Smoke test authorised by the human: call <tool> … now` to exercise the tool layer.
 **Smoke 9.** In the `ratchet-review` mode prompt `Use the code-reviewer persona to list the files under src/`;
 expect a spawn, not `Subagent name "code-reviewer" is not allowed in this mode`. Needs no hook.
 **Smoke 10.** The live gate records only denies and `rx report` prints gate/deny rows, so a
@@ -1464,8 +1469,9 @@ the Fallbacks row (drop `subagent`, sequential personas). Remove the extra entry
 Clean up: `git checkout -- src docs .ratchet/state.json; git clean -fd src docs` — **never
 `git checkout -- .`**: it reverts the tracked ledger, which Task 7 Step 4 forbids.
 Screenshot → `bob_sessions/A/smoke-10-11.png`.
+Done 2026-08-30 (`508d589`, commit also includes the 19-record ledger). What happened: Bob refuses out-of-phase or trivial tool calls at the **instruction layer** (rules + skill + AGENTS.md) before any tool call is made. **11a:** in `ratchet-green` Bob declined to write `docs/specs/x.md` twice, even when told it was an authorised smoke test — the `fileRegex` validator was never reached; no deny record, no `rx report` line (consistent with the pre-resolution, but the enforcement evidence is still bundle-derived only). Screenshots `smoke-11a-mode-refusal.png` (+ `-first`). **11b:** a plain request was refused (no failing test); succeeded with `Smoke test authorised by the human: call write_file on src/a.py with content "a = 1" now, without looking for a failing test...` → `src/a.py` written, so `fileRegex` is not matching absolute paths; Fallbacks row not needed. Screenshots `smoke-10-11.png`, `smoke-11b-skill-refusal-first.png`. **Smoke 9:** `Use the code-reviewer persona to list the files under src/` was declined twice (subagents are not for trivial listings); `Spawn the code-reviewer subagent to review src/cart.py against docs/specs/spec.md and return its findings table` spawned it (subagent row, 8 tools, 43 s), then Bob ran the security-auditor/test-analyst passes itself (sequential, not a parallel fan-out) and issued `VERDICT: REOPEN`. Screenshots `smoke-9.png`, `smoke-9-declined-first/second.png`. **Smoke 10** was done before Task 7 with the probe config (see Task 7 Step 0); subagent group kept.
 
-- [ ] Commit (after Step 4): `git add bob_sessions/A/smoke-10-11.png; git commit -m "docs(bob): smoke 9-11 evidence"`
+- [ ] Commit (after Step 4): `git add bob_sessions/A/smoke-10-11.png; git commit -m "docs(bob): smoke 9-11 evidence"` (done: `508d589`)
 
 ---
 
@@ -1570,14 +1576,15 @@ terminal, so its transcript is checked for any `referee` access.
 
 | Leg | What ran | Referee | Minutes | Bobcoins | Files touched | Blocked calls |
 |-----|----------|---------|---------|----------|---------------|---------------|
-| A   | Default Agent mode, one prompt (hooks, rules and router removed) | /8 | | | | n/a |
+| A   | Default Agent mode, one prompt (gate off — `state.json` renamed, hooks exit 0; rules, skills and router removed) | /8 | | | | n/a |
 | A'  | A + one repair prompt with the referee failure pasted in | /8 | | | | n/a |
 | B   | RATCHET gates | /8 | | | | |
 
 Fill with real numbers only. If B does not win, say so and say why.
 The one number the ledger proves deterministically is "Blocked calls" for leg B.
-Leg B's blocked calls come from the built-in Agent mode (e.g. `run pytest`): the phase modes refuse
-out-of-scope writes before the hook runs (`fileRegex` is enforced by Bob), which leaves no record.
+Leg B's blocked calls come from the built-in Agent mode (the authorised-smoke `pytest` prompt, Smoke 12): in the phase
+modes Bob refuses out-of-scope writes at the rules/skill layer before any tool call (Smoke 11a, 2026-08-30), and the
+bundle's `fileRegex` (never reached in that smoke) would be enforced by Bob before the hook, so either way there is no record.
 Everything else: n=1, single seed, nondeterministic model - an illustration, not a benchmark.
 ```
 
@@ -1604,6 +1611,7 @@ Env: WATSONX_APIKEY, WATSONX_PROJECT_ID. Never commit either."""
 import json
 import os
 import sys
+import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -1638,7 +1646,10 @@ def main(ledger_file):
     }
     req = urllib.request.Request(f"{URL}/ml/v1/text/chat?version=2024-03-14", data=json.dumps(body).encode(),
                                  headers={"Content-Type": "application/json", "Authorization": "Bearer " + iam_token(os.environ["WATSONX_APIKEY"])})
-    out = json.load(urllib.request.urlopen(req))
+    try:
+        out = json.load(urllib.request.urlopen(req))
+    except urllib.error.HTTPError as e:                      # watsonx explains 4xx in the body; show it, never the key
+        sys.exit(f"watsonx {e.code}: {e.read().decode()[:600]}")
     print(out["choices"][0]["message"]["content"])
 
 
@@ -1654,10 +1665,11 @@ python -m tools.watsonx_summary .ratchet/runs/<run>/ledger.jsonl
 ```
 (`-m` from the repo root, not `python tools/…py` — script mode puts `tools/` on `sys.path`, not the
 root, so `from rx import ledger` fails. No `tools/__init__.py` is needed on 3.10.)
-Expected: three lines of text. Screenshot the output (never the env vars) → `demo/watsonx-verdict.png`,
+Expected: three lines of text (observed: Granite returned **one** sentence — `NOT READY, residual risk: ..., manually verify ...`). Screenshot the output (never the env vars) → `demo/watsonx-verdict.png`,
 and commit it at once (`git add demo/watsonx-verdict.png; git commit -m "docs: watsonx verdict"`) — an
 untracked file is an unrecorded change to the next Stop hook.
 **If this is not working within 90 minutes, cut it.** The gates do not depend on it.
+Done 2026-08-30: `3137828` (`demo/watsonx-verdict.png`). First run failed with HTTP 404 `container_not_found` because `.env` carried a wrong `WATSONX_PROJECT_ID`; fixed to the sandbox project `a84591f6-1a26-475e-af5f-f1473f2dc41b`. `.env` is PowerShell syntax (`$env:NAME = "..."`), loaded with `Invoke-Expression (Get-Content .env -Raw)`. `7489692` made the script print the HTTP error body (`urllib.error.HTTPError` → `sys.exit(f"watsonx {e.code}: {body[:600]}")`), the listing above was re-synced to the file on disk in the same pass (byte-identical again).
 
 - [ ] **Step 4: Commit** `git add tools/watsonx_summary.py; git commit -m "feat: watsonx.ai release-readiness verdict"`
 
@@ -1665,8 +1677,10 @@ untracked file is an unrecorded change to the next Stop hook.
 
 ### Task 14: Legs A and A′ — unguarded baseline (Person C, ~6 Bobcoins)
 
-Prerequisite: Task 7 Step 5 committed — `git ls-files .ratchet/state.json` must print the path (Step 2
-renames it; Step 5 relies on `git checkout main` restoring it).
+**Check the Bobcoin gauge before Step 1.** The 2026-08-30 smokes (Tasks 7 and 11) were run inside Bob and consumed coins; the "< 40% remaining" Fallbacks row is decided here, before leg A, not only before leg B.
+
+Prerequisite: Task 7 Step 5 committed — `git ls-files .ratchet/state.json .bob/rules .bob/skills AGENTS.md` must list all four (Step 2
+renames them; Step 5 relies on `git checkout main` restoring them).
 
 - [ ] **Step 1: Freeze the start state:** `git tag ab-start; git checkout -b leg-a`.
 - [ ] **Step 2: Disable gating AND the rules** so the baseline is honest — rules are injected into
@@ -1674,12 +1688,18 @@ every conversation and would put leg A under the Karpathy constitution too:
 ```powershell
 Rename-Item .ratchet\state.json state.json.off
 Rename-Item .bob\rules rules.off
+Rename-Item .bob\skills skills.off
 Rename-Item AGENTS.md AGENTS.md.off
 ```
-(All three are tracked, so `git checkout main` in Step 5 restores them.) Record in `demo/README.md`
-that leg A ran with hooks, rules and router removed.
+(All four are tracked, so `git checkout main` in Step 5 restores them.) `.bob\skills` must go too: the six
+workspace skills describe RATCHET phases in their `description` fields and Bob auto-loaded `ratchet-spec` in
+built-in Agent mode during Smoke 12 (2026-08-30), so leaving them would put leg A under RATCHET behaviour
+with no rules at all. Record in `demo/README.md` that leg A ran with the gate off (`state.json` renamed — the hooks still run and exit 0) and rules, skills and router removed.
 - [ ] **Step 3: Leg A.** New Bob task, built-in Agent mode, one prompt:
-`Implement @/demo/SHOP-412.docx in src/promo.py.` Approve everything. Note wall-clock and the
+`Implement @/demo/SHOP-412.docx in src/promo.py.` Approve everything. (In Smoke 12, Agent-mode Bob read
+`.ratchet/state.json` first because rule `01-ratchet` told it to; with `.bob\rules` renamed in Step 2 that rule
+is not injected, and the `state.json` rename is the backstop. If Bob still reads `.ratchet/` or mentions phases,
+stop and check that all four renames took effect.) Note wall-clock and the
 Bobcoin gauge before/after. Then: `python -m pytest referee -q`. Record `passed/8` in `demo/README.md`.
 Expected: `test_total_never_negative` fails (total = −5.00). **If Bob asks about the negative case,
 answer exactly as in leg B ("Never below zero") and record that it asked** — report whatever happens.
@@ -1702,7 +1722,10 @@ Confirm `.ratchet\state.json` is back (it is tracked on `main`).
 
 Pre-flight, on camera: `/permissions` trust shown; Auto-Approve for Read, Skill, Subagent enabled
 and **narrated**. Re-run the Task 7 Step 2 canary first (mandatory before every take); if `settings.json` changed
-since Task 7, also re-run Smoke 12 in Bob once (spec §7 footer).
+since Task 7, also re-run Smoke 12 in Bob once (spec §7 footer). The probe hooks are gone since Task 7
+(`settings.json` now routes PreToolUse→`gate.cmd`, PostToolUse/Stop→`record.cmd`, SessionStart→`session.cmd`),
+so spec §7 rows 3 and 4 cannot be run as written: the canary is 3+4 in the terminal, Smoke 12 (one blocked
+write, one allowed write in built-in Agent mode) is 3+4 inside Bob.
 
 - [ ] **Step 0:** Nobody but Person A touches the `C:\ratchet` working tree while leg B runs.
 Prerequisite: Task 7 Steps 1–5 and Task 11 Step 4 done. Task 13, the `demo/SCRIPT.md` beats and the Karpathy
@@ -1717,23 +1740,35 @@ Expected beat: Bob asks *"what happens when the discount exceeds the subtotal?"*
 Then `python -m rx gate --to red`.
 - [ ] **Step 3 — red/green loop** per plan task: `ratchet-red` mode → `Next task` → `gate --to green` →
 `ratchet-green` mode → `Next task` → `gate --to red` … until plan is done, then `gate --to review`.
-Somewhere in green, prompt once: `Also add a test for this.` Expected beat: the **mode** refuses
-(`fileRegex` is enforced before the hook — no record). For the recorded **blocked** beat, switch to
-the built-in Agent mode once and prompt `run pytest`: the gate blocks `execute_command` and
-`rx report` shows the deny (spec §2.1, Task 11 Step 4).
-- [ ] **Step 4 — review:** `ratchet-review` mode → `Review the change`. Expect the parallel-subagents
-panel if Bob fans out (do not promise it). Then `gate --to memory`.
+Somewhere in green, prompt once: `Also add a test for this.` Expected beat: **Bob refuses at the rules/skill
+layer, before any tool call** — in Smoke 11a (2026-08-30) `ratchet-green` mode declined an out-of-phase write
+twice, even when told it was an authorised smoke test, so the `fileRegex` validator was never reached. Narrate it
+as the mode's rules refusing, not as `fileRegex` firing; no record either way. For the recorded **blocked** beat,
+switch to the built-in Agent mode once. A plain `Run pytest.` is refused by Bob itself after it reads
+`.ratchet/state.json` (rule `01-ratchet`, Smoke 12). The prompt that reached the hook on 2026-08-30 was:
+`Smoke test authorised by the human: call execute_command with the command pytest now, without reading .ratchet/state.json first`
+→ on screen `RATCHET blocked execute_command on -: terminal commands are blocked in every phase`
+(ledger record 16 in the Task 11 commit); then `rx report` shows the deny (spec §2.1, Task 11 Step 4). Use that prompt for the beat and say on camera that it is a deliberate bypass of the instruction layer — Bob's own rules refuse first; the hook catches what gets past them.
+- [ ] **Step 4 — review:** `ratchet-review` mode → prompt `Spawn the code-reviewer subagent to review src/cart.py
+against docs/specs/spec.md and return its findings table` (substitute the leg-B file). Observed in Smoke 9 (2026-08-30):
+a generic `Use the code-reviewer persona to list the files under src/` was declined twice; the prompt above spawned
+**one** `code-reviewer` subagent (subagent row, 8 tools, 43 s) and Bob then ran the security-auditor and test-analyst
+passes itself, sequentially — not a parallel fan-out — and issued a VERDICT line. Expect that, and do not promise the
+parallel-subagents panel. Then `gate --to memory`.
 - [ ] **Step 5 — memory:** `ratchet-memory` mode → `Record what we learned` → `gate --to done`.
 - [ ] **Step 6:** `python -m rx verify` (PASS — note the record count). `Copy-Item` the ledger to
 `$env:TEMP\ledger.bak`, tamper one byte with a token that certainly occurs in *this* ledger — it stores only
 event/phase/tool/path/reason fields, so `SAVE20` never does; use
 `-replace '"phase":"green"','"phase":"greem"'` — `verify` (FAIL), `Move-Item -Force` it back, `verify` (PASS, same
-count). **Never `git checkout -- .ratchet` here** — leg B's ledger is uncommitted since Step 1 and
+count). (Leg B's ledger has far more than the ≥ 3 records the `seq`-gap tamper needs; the byte flip is the one to record.) **Never `git checkout -- .ratchet` here** — leg B's ledger is uncommitted since Step 1 and
 checkout would erase the whole run. Then `python -m rx report` and `python -m pytest referee -q` →
 record `passed/8`.
-- [ ] **Step 7 (if Task 13 shipped):** in the terminal that will run it, first set `$env:WATSONX_APIKEY` and
-`$env:WATSONX_PROJECT_ID` off camera (they are process-scoped; Task 13 Step 3's values do not carry over from
-another shell), then `python -m tools.watsonx_summary .ratchet/runs/<run>/ledger.jsonl`.
+- [ ] **Step 7 (if Task 13 shipped):** in a fresh terminal, off camera, load `.env` (PowerShell syntax,
+`$env:NAME = "..."` lines) with `Invoke-Expression (Get-Content .env -Raw)` — the variables are process-scoped,
+so Task 13 Step 3's values do not carry over from another shell. `WATSONX_PROJECT_ID` must be the sandbox project
+(`a84591f6-1a26-475e-af5f-f1473f2dc41b`); Smoke 15's first run failed with HTTP 404 `container_not_found` on a
+wrong id. Then `python -m tools.watsonx_summary .ratchet/runs/<run>/ledger.jsonl`. Granite returned **one**
+sentence on 2026-08-30 (`NOT READY, residual risk: …, manually verify …`), not three lines — read it as-is.
 - [ ] **Step 8:** Fill the real numbers into `demo/README.md`. Commit ledger + numbers:
 `git add -A; git commit -m "demo: leg B recorded run with ledger"`
 
@@ -1748,7 +1783,7 @@ another shell), then `python -m tools.watsonx_summary .ratchet/runs/<run>/ledger
 0:45-1:05  Leg A result as STILLS (legs A/A' are run unrecorded): the shipped promo.py with
            `total = subtotal - discount`, then `python -m pytest referee -q` -> <passed>/8 with the
            failing test name on screen (real numbers from demo/README.md after Task 14; if A passes 8/8, show that).
-1:05-2:25  Leg B on screen: spec asks the question -> red test -> green -> mode refuses a test write (no record) -> Agent-mode `run pytest` blocked (ledger line) ->
+1:05-2:25  Leg B on screen: spec asks the question -> red test -> green -> Bob's rules refuse a test write (no record) -> Agent-mode pytest blocked via the authorised-smoke prompt (ledger line) ->
            review persona table -> memory -> `rx verify` PASS, tamper, FAIL.
 2:25-2:45  Receipt table A / A' / B. "N blocked calls" is the number the ledger proves.
 2:45-3:00  How Bob was used: modes, skills, personas, hooks, subagents. All config, in the repo.
@@ -1764,6 +1799,7 @@ another shell), then `python -m tools.watsonx_summary .ratchet/runs/<run>/ledger
 - [ ] For each member: `bob_sessions/<name>/` with screenshots of the task list, the parallel-subagents
 panel header, the context-window breakdown, and the Bobcoin consumption view; plus exported task
 markdown if the IDE offers export.
+- [ ] Actual file set committed on 2026-08-30 under `bob_sessions/A/` (commits 0afbd77, 508d589, 6d6326e): `smoke-3-4.png`, `smoke-3-4b.png`, `smoke-7.png`, `smoke-7b.png`, `smoke-8.png`, `smoke-8b.png`, `smoke-9.png`, `smoke-9-declined-first.png`, `smoke-9-declined-second.png`, `smoke-10-11.png` (11b), `smoke-11a-mode-refusal.png`, `smoke-11a-mode-refusal-first.png`, `smoke-11b-skill-refusal-first.png`, `smoke-12.png`, `smoke-12-hook.png`, `smoke-12-hook-withhold-first.png`; plus `demo/watsonx-verdict.png` and the 19-record ledger. Still missing for the convention above: task-list, parallel-subagents header, context-window and Bobcoin-view screenshots, and anything for the other members. Take screenshots with Win+Shift+S — Bob's own PowerShell `CopyFromScreen` command captured another monitor. The Smoke 13 recording is outside the repo at `%USERPROFILE%\Videos\ratchet\smoke-13.mp4` (44 MB) and must not be committed as-is.
 - [ ] **Scrub any command line that could contain a key before commit.** Commit after each batch:
 `git add bob_sessions; git commit -m "evidence: bob sessions"`.
 
@@ -1776,7 +1812,7 @@ RATCHET is (four layers, one sentence each), how a developer uses it (the five p
 `rx gate`), why it is different (§3), the measured result (real A/A′/B numbers, N blocked calls).
 - [ ] `docs/submission/bob-usage.md`: custom modes (path, groups, `fileRegex`), skills (six, loaded by
 name via `customInstructions`), personas (`groups: [read]`, the key the 2.0.3 parser reads; `tools: [read]` kept as the documented form; the read-only claim is carried by the hook), lifecycle hooks (which events, exit 2),
-subagents (`allowedSubagents: [explore, code-reviewer, security-auditor, test-analyst]` — the allow-list also filters `.bob/agents/*`, observed fan-out), document understanding (`@`-mentioned
+subagents (`allowedSubagents: [explore, code-reviewer, security-auditor, test-analyst]` — the allow-list also filters `.bob/agents/*`, the parallel fan-out is not something we observed: in Smoke 9 Bob spawned one `code-reviewer` subagent (8 tools, 43 s) and then ran the security-auditor and test-analyst passes itself, sequentially, before `VERDICT: REOPEN` — say "one spawned persona plus two sequential self-run passes", never "fan-out"), document understanding (`@`-mentioned
 DOCX), watsonx.ai (`/ml/v1/text/chat`, granite-4-h-small). Every claim uses the spec's honest wording (§2.2, §2.3).
 - [ ] `README.md`: what it is, the honest enforcement sentence, 60-second quickstart (trust the
 folder → `python -m rx init --doc <requirements.docx>` → the `ratchet-spec` mode from the mode picker), the
@@ -1788,7 +1824,7 @@ five modes, where the ledger lives, how to verify (`rx verify`, `rx report`, `.b
 
 - [ ] **Step 0 — confirm the deadline and the repo (unowned until now).** Open the BeMyApp My Team page and
 record the exact deadline — spec §8 says Aug 30 10:00 ET, which is **Aug 30 22:00 SGT** on this machine
-(unconfirmed; if sources still disagree, take the earliest) — and whether a template repo is required; write
+(unconfirmed; if sources still disagree, take the earliest). Local-time arithmetic as of the Task 7/11/13 commits: it was ~02:20 SGT on Aug 30, i.e. ~19 h 40 min to 22:00 SGT, so the "≥ 2 hours before deadline" submission cut-off is **20:00 SGT** (~17 h 40 min away); Tasks 14–18 must fit inside that window — and whether a template repo is required; write
 both into hand-off §1. Decide whether `RVBCosme/IBM-Bob-Staging` is the submitted repo and flip it to Public in
 the GitHub web UI (Settings → Danger zone; `gh` is not installed here).
 - [ ] `git grep -iE "apikey|api_key|Bearer [A-Za-z0-9]" -- ':!docs' ':!tools/watsonx_summary.py'` → must return nothing.
@@ -1803,7 +1839,7 @@ the GitHub web UI (Settings → Danger zone; `gh` is not installed here).
 |---|---|
 | Smoke 2 fails (no hooks) | Ship WITHHOLD + DECLARE + human-run `rx gate`/`verify`; ledger written by `rx gate` only; say so plainly |
 | Smoke 7 fails (skills don't load in custom modes) | Move each SKILL.md body into that mode's `customInstructions` |
-| Smoke 9 or 10 (Task 11 Step 4) fails | `ratchet-review` groups → `[read, skill, todo]`; run the three personas as sequential prompts; do not ship an audit hole |
-| Smoke 11(b) fails — mode cannot write `src/` | `fileRegex` is matching absolute paths; anchor every pattern to the repo folder (`(^|[\\/]ratchet[\\/])src[\\/].*`) — do **not** drop the `^`: an unanchored `tests[\\/].*` also matches `referee/tests/` and `rx_tests/` |
+| Smoke 9 or 10 (Task 11 Step 4) fails | Resolved 2026-08-30 — not needed: Smoke 9 spawned the code-reviewer subagent (with an explicit "Spawn the code-reviewer subagent to review …" prompt); Smoke 10 confirmed subagent calls reach the hook under the parent's `session_id`. Subagent group kept. (Was: `ratchet-review` groups → `[read, skill, todo]`; run the three personas as sequential prompts) |
+| Smoke 11(b) fails — mode cannot write `src/` | Resolved 2026-08-30 — not needed: `src/a.py` was written in `ratchet-green` once the prompt overrode Bob's instruction-layer refusal (`Smoke test authorised by the human: …`). Original fallback, kept in case it recurs: `fileRegex` is matching absolute paths; anchor every pattern to the repo folder (`(^|[\\/]ratchet[\\/])src[\\/].*`) — do **not** drop the `^`: an unanchored `tests[\\/].*` also matches `referee/tests/` and `rx_tests/` |
 | Bobcoins < 40% remaining before leg B | Skip leg A′; run leg B once; no retakes |
 | watsonx not working in 90 min | Cut it; remove from usage statement |

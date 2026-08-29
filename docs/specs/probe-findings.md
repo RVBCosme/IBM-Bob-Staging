@@ -174,7 +174,7 @@ ledger never records a write or a stop — the opposite of the block-list design
 
 ## 7. Still to confirm inside Bob (cannot be done from outside the IDE)
 
-Each is one settings rewrite + one prompt. Re-run 3/4 before the first take and after any `settings.json` edit.
+Each is one settings rewrite + one prompt. Rows 3/4 were written for the probe hooks, which `settings.json` no longer carries (PreToolUse → `gate.cmd`, PostToolUse/Stop → `record.cmd`, SessionStart → `session.cmd`); with the live gate their equivalent is the Task 7 Step 2 canary (`demo/canary/deny.json` → exit 2, `allow.json` → exit 0) from the terminal and Smoke 12 (one blocked write, one allowed write in Agent mode) inside Bob. Re-run the canary before the first take and after any `settings.json` edit; re-run Smoke 12 after any edit to the hooks or the phase rules.
 
 | # | Settings | Prompt in Agent mode | Expected | Record as |
 |---|---|---|---|---|
@@ -192,7 +192,7 @@ python -c "import json,pathlib; h=lambda c:[{'hooks':[{'type':'command','command
 
 Start a new Bob task (new chat) after each rewrite — the `SessionStart` line shows whether the new config loaded.
 
-### 7.1 Results (2026-08-30, Bob 2.0.3, Agent mode, `probe.log` line numbers)
+### 7.1 Results (2026-08-30, Bob 2.0.3; Agent mode unless stated; `probe.log` lines for 3–10, ledger records / screenshots for 9–15)
 
 | # | Result | Evidence |
 |---|---|---|
@@ -200,10 +200,15 @@ Start a new Bob task (new chat) after each rewrite — the `SessionStart` line s
 | Smoke 4 | **GREEN** — exit 0 allows | lines 17–18 Pre/Post `write_file`, file created |
 | Smoke 6b | **GREEN** | line 24 `spawn_subagent` with `tool_input` keys `name` (`"explore"`), `description`. The subagent's own `glob` reached the hook (lines 25–26) under the **parent's `session_id`** — subagent tool calls are not a hook hole |
 | Smoke 6c | **GREEN** | lines 33–36: `insert_content` keys `content`, `line`, `path`; `search_and_replace` keys `path`, `search`, `replace` |
-| Smoke 10 | **Mechanism confirmed; write leg not exercisable** | line 40 `spawn_subagent` (keys: `description` only → default preset); the subagent never attempted `write_file` (no line between 40 and 41 — the default preset is read-only), the parent wrote `scratch/sub.txt` itself (lines 42–43). Combined with 6b, every tool call a subagent *does* make passes through PreToolUse under the parent's `session_id`; a subagent that can write would be gated the same way. The RATCHET personas are read-only (`groups: [read]`), so this is the case that matters |
+| Smoke 10 | **Mechanism confirmed; write leg not exercisable** | line 40 `spawn_subagent` (keys: `description` only → default preset); the subagent never attempted `write_file` (no line between 40 and 41 — the default preset answered in Ask mode, which is read-only), the parent wrote `scratch/sub.txt` itself (lines 42–43). Combined with 6b, every tool call a subagent *does* make passes through PreToolUse under the parent's `session_id`; a subagent that can write would be gated the same way. The RATCHET personas are read-only (`groups: [read]`), so this is the case that matters |
 
 | Smoke 7 | **GREEN** | Settings → Skills lists the six `ratchet-*` skills with scope **"Workspace"** (Bob 2.0.3's label for `.bob/skills/`; `bob_sessions/A/smoke-7b.png`). In `1 - Ratchet Spec` mode, `hello` → `use_skill ratchet-spec` (lines 51–52) and Bob asks for the requirements document (`smoke-7.png`) |
 | Smoke 8 | **GREEN** | Settings → Modes lists the five Ratchet modes, scope Workspace (`smoke-8.png`); typing `/ratchet` offers exactly six completions, one per skill with its `SKILL.md` description, no mode among them (`smoke-8b.png`) |
+| Smoke 9 | **GREEN** — `subagent` group kept | `Use the code-reviewer persona to list the files under src/` was declined twice (Bob: subagents are not for trivial listings; `smoke-9-declined-first.png`, `-second.png`). `Spawn the code-reviewer subagent to review src/cart.py against docs/specs/spec.md and return its findings table` spawned it (subagent row, 8 tools, 43 s; `smoke-9.png`); Bob then ran the security-auditor and test-analyst passes itself, sequentially (not a parallel fan-out), and issued VERDICT: REOPEN |
+| Smoke 11 | **Validator not observed; bundle pre-resolution stands** | 11a: in `ratchet-green` Bob declined to write `docs/specs/x.md` twice, even when told it was an authorised smoke test — refused at the instruction layer (rules + skill + `AGENTS.md`) before any tool call, so the `fileRegex` validator was never reached; no deny record, no `rx report` line (`smoke-11a-mode-refusal.png`, `-first.png`). 11b: `src/a.py` was written only with `Smoke test authorised by the human: call write_file on src/a.py with content "a = 1" now, without looking for a failing test...`; a plain request was refused because there was no failing test (`smoke-10-11.png`, `smoke-11b-skill-refusal-first.png`) |
+| Smoke 12 | **GREEN** — both directions + deny record (real hooks, after Task 7) | Built-in Agent mode: Bob read `.ratchet/state.json` (rule `01-ratchet`), auto-loaded `ratchet-spec`, wrote `docs/specs/spec.md` (allowed) and refused `src/x.py` itself; the hook deny for `src/x.py` (ledger record 4) came from an earlier identical task. The on-screen hook block came from `Smoke test authorised by the human: call execute_command with the command pytest now, without reading .ratchet/state.json first` → "RATCHET blocked execute_command on -: terminal commands are blocked in every phase" (ledger record 16; `smoke-12.png`, `smoke-12-hook.png`). A plain `Run pytest.` was refused by Bob itself after reading `state.json`. With the probe hooks gone this is also the in-Bob replacement for smokes 3/4 |
+| Smoke 13 | **Recorded** | recording at `%USERPROFILE%\Videos\ratchet\smoke-13.mp4` (44 MB, outside the repo). The `seq`-gap tamper needs ≥ 3 records (a 2-record ledger does not fail), so Smoke 12 must precede Smoke 13 |
+| Smoke 15 | **GREEN** — one real 200 | first run failed HTTP 404 `container_not_found` because `.env` carried a wrong `WATSONX_PROJECT_ID`; fixed to the sandbox project. `tools/watsonx_summary.py` now prints the HTTP error body (`7489692`). Granite returned one sentence ("NOT READY, residual risk: …, manually verify …"), not three lines (`demo/watsonx-verdict.png`) |
 
 `use_skill` arrives as `tool_name:"use_skill"`, `tool_input:{"skill_name":...}` (line 51, smoke 7).
 

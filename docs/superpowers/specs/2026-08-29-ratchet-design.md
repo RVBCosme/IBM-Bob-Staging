@@ -46,8 +46,8 @@ tool surface it did not choose, and every transition is recorded and machine-che
 | Layer | Mechanism | Sourced IBM wording |
 |---|---|---|
 | **WITHHOLD** | mode `groups` | *"If you omit groups, the mode does not get any grouped tools"*; *"Unknown group names do not grant access"* |
-| **DECLARE** | `fileRegex` on `edit` | *"Restrict which files a mode can edit"* — enforced by Bob's edit-group validator **before** the hook runs (2.0.3 bundle; Smoke 11), so an in-mode out-of-phase write leaves no deny record; the hook covers everything the mode cannot |
-| **BLOCK** | `PreToolUse` hook, exit 2 | *"Exit code 2 prevents the tool from running. Bob reports the tool as blocked"* |
+| **DECLARE** | `fileRegex` on `edit` | *"Restrict which files a mode can edit"* — enforced by Bob's edit-group validator **before** the hook runs (2.0.3 bundle; still bundle-derived — in Smoke 11a Bob declined the out-of-phase write at the instruction layer before any tool call, so the validator was never observed), so an in-mode out-of-phase write leaves no deny record; the hook covers everything the mode cannot |
+| **BLOCK** | `PreToolUse` hook, exit 2 | *"Exit code 2 prevents the tool from running. Bob reports the tool as blocked"* — observed live (Smoke 3 with the probe hook; Smoke 12 with the real gate: "RATCHET blocked execute_command on -: terminal commands are blocked in every phase", ledger record 16) |
 | **AUDIT** | HMAC-chained ledger written by hooks + gate script | Records; cannot block (*exit 2 has no effect on `PostToolUse`/`Stop`*) |
 
 ### 2.2 The two claims we make, in full
@@ -163,7 +163,7 @@ C:\ratchet\                          <- NOT under OneDrive, NO spaces in path
 | 1 | `ratchet-spec` | `read`, `edit`(`^docs[\\/]specs[\\/].*\.md$`), `skill`, `todo` | No terminal; writes only specs |
 | 2 | `ratchet-red` | `read`, `edit`(`^tests[\\/].*`), `skill`, `todo` | Writes a failing test and **cannot run it** |
 | 3 | `ratchet-green` | `read`, `edit`(`^src[\\/].*`), `skill`, `todo` | Cannot reach `tests/`, so cannot pass by editing the test |
-| 4 | `ratchet-review` | `read`, `subagent`, `skill`, `todo`, `allowedSubagents: [explore, code-reviewer, security-auditor, test-analyst]` | IBM's read-only Ask surface minus `mcp`/`mode`, plus `todo`. Bob applies the allow-list to built-in presets **and** `.bob/agents/*` together, so the three personas must be named or the mode cannot spawn them |
+| 4 | `ratchet-review` | `read`, `subagent`, `skill`, `todo`, `allowedSubagents: [explore, code-reviewer, security-auditor, test-analyst]` | IBM's read-only Ask surface minus `mcp`/`mode`, plus `todo`. Bob applies the allow-list to built-in presets **and** `.bob/agents/*` together, so the three personas must be named or the mode cannot spawn them. Resolved 2026-08-30: `code-reviewer` was spawned on request (Smoke 9, subagent row, 8 tools, 43 s) and subagent tool calls reach the hook under the parent's `session_id` (Smokes 6b/10; the default subagent preset is read-only, so only the read leg was exercisable) — the `subagent` group stays |
 | 5 | `ratchet-memory` | `read`, `edit`(`^memory[\\/].*`), `skill`, `todo` | Writes only memory |
 
 **Phase 0 (`init`) is not a mode.** A human runs `python -m rx init --doc <requirements>` in a
@@ -181,7 +181,7 @@ built-in Agent mode. Bob 2.0.3 generates **no** slash command from a mode: its s
 built from skills, extension triggers and MCP prompts only (bundle, `getAutocompleteSources`), so the
 `/ratchet-*` completions that appear are the same-named *skills*. Picking `/ratchet-red` activates the
 skill in whatever mode is current; it does not switch the mode. **Do not create `.bob/commands/*.md`
-for any phase** — a command cannot switch the mode either; the picker is the entry point.
+for any phase** — a command cannot switch the mode either; the picker is the entry point. Observed in Smoke 12: in the **built-in Agent mode** Bob read `.ratchet/state.json` (rule `01-ratchet`) and auto-loaded `ratchet-spec` unprompted, so the six workspace skills under `.bob/skills` shape behaviour even outside the phase modes.
 
 Each mode's `customInstructions` opens with IBM's own Plan-mode pattern:
 `call use_skill with skill_name: "ratchet-<phase>"` — plus a short inline checklist as backstop,
@@ -257,7 +257,7 @@ all writes to `.ratchet/**` and `.bob/**`.
 
 **The gate writes its own DENY record before exiting 2.** `PostToolUse` runs only after a tool
 *completes*; a blocked tool never completes, so without this the ledger records only successes and
-the blocks — the entire point — are invisible.
+the blocks — the entire point — are invisible. Observed in Smoke 12 (ledger records 4 and 16; `bob_sessions/A/smoke-12-hook.png`). Note that Bob normally refuses out-of-phase or terminal calls itself at the instruction layer (rules + skill + `AGENTS.md`) before any tool call; the hook fires only when a prompt gets the call past that layer.
 
 ### 4.4 The ledger
 
@@ -379,6 +379,7 @@ exceeds the subtotal. Unguarded Bob ships `total = subtotal - discount` → a $5
 totals **−$5.00**. The checkout pays the customer. Visually unmistakable in three seconds.
 
 **Legs:** A (unguarded) · A′ (A + the *unguarded repair pass*) · B (RATCHET).
+Leg A caveat (2026-08-30): renaming `state.json`, `.bob/rules` and `AGENTS.md` does **not** remove the six workspace skills under `.bob/skills`; their descriptions mention RATCHET phases and Bob auto-loaded `ratchet-spec` in Agent mode (Smoke 12), so leg A may still get RATCHET behaviour unless `.bob/skills` is renamed for the run too (tracked; `git checkout main` restores it).
 Compare **B against A′**, not against A — B costs more up front and saves the rework. Leading with
 that honesty is itself a scoring advantage.
 
@@ -388,7 +389,7 @@ Everything else is `n=1, single seed, nondeterministic model — an illustration
 "completeness and feasibility" the moment a judge opens the repo.
 
 **Money shot:** run `rx-verify` on an intact ledger (green), tamper one byte, run again (red,
-naming the line). Record this at hour 2 while the ledger is short, not at hour 23.
+naming the line). Record this at hour 2 while the ledger is short, not at hour 23. Done 2026-08-30 (Smoke 13): recording at `%USERPROFILE%\Videos\ratchet\smoke-13.mp4` (44 MB, outside the repo). The `seq`-gap tamper only fails on a ledger of ≥ 3 records, so Smoke 12 must precede Smoke 13.
 
 **Demo hygiene:** grant workspace trust on camera via `/permissions` and narrate it as part of the
 governance story — a judge's fresh clone silently does nothing without it. Pre-enable auto-approve
@@ -430,15 +431,17 @@ command lines.
 | 7 | Do skills load in a **custom** mode? | Fall back to `customInstructions` bodies |
 | 8 | Do all five modes load in the picker? (the `/ratchet-*` completions are the six skills, not the modes) | One bad `fileRegex` kills all five silently |
 | 9 | `allowedSubagents: [explore, code-reviewer, security-auditor, test-analyst]` loads and `ratchet-review` can spawn `code-reviewer` | BRANCH → omit key, drop `subagent` |
-| 10 | Do hooks fire for subagent tool calls? | BRANCH → drop `subagent`; do not ship an audit hole |
-| 11 | `fileRegex`: enforced or advisory? Pre-resolved from the 2.0.3 bundle: **enforced, before the hook** | In-mode out-of-phase writes leave no deny record, so leg B's blocked calls come from the built-in Agent mode; the hook still carries the claim |
+| 10 | Do hooks fire for subagent tool calls? | BRANCH → drop `subagent`; do not ship an audit hole. Resolved: subagent calls (read leg; the default subagent preset is read-only) reach the hook under the parent's `session_id` — group kept |
+| 11 | `fileRegex`: enforced or advisory? Pre-resolved from the 2.0.3 bundle: **enforced, before the hook** (not observed in Smoke 11a — Bob declined the out-of-phase write at the instruction layer before any tool call; the claim stays bundle-derived) | In-mode out-of-phase writes leave no deny record, so leg B's blocked calls come from the built-in Agent mode; the hook still carries the claim |
 | 12 | Gate end-to-end **both directions** + deny record present | Non-negotiable |
 | 13 | Verifier PASS and FAIL (byte flip; deleted record → `seq` gap) | The money shot |
 | 14 | PDF `@`-mention returns text | PDF/DOCX only |
 | 15 | watsonx: IAM → model specs → one real 200 | Cut the watsonx leg |
 
 Before every take: re-run the Task 7 Step 2 canary (`gate.cmd` exists, deny fixture exits 2). After
-**any** `settings.json` edit: also re-run 3, 4 and 12 inside Bob.
+**any** `settings.json` edit: also re-run 12 inside Bob — with the live gate (probe hooks removed in Task 7)
+rows 3 and 4 cannot be run as written; the canary is 3+4 in the terminal and Smoke 12 (one blocked write, one
+allowed write in built-in Agent mode) is 3+4 inside Bob.
 
 ---
 
@@ -481,3 +484,4 @@ porting Superpowers files verbatim.
   each adjudicated by 3 independent lenses. All 8 attacks succeeded against the pre-correction design.
 - Retained artifacts: exact `.bob/settings.json` hook schema, all five stdin payload schemas,
   IBM's path-blocking example, live Windows exit-code measurements, live watsonx model catalogue.
+- Pass 3 — 2026-08-30 IDE verification on Bob 2.0.3: smokes 3, 4, 6b/6c, 7–13 and 15 run (results in `docs/specs/probe-findings.md` §7.1); Smoke 14 not yet recorded.
