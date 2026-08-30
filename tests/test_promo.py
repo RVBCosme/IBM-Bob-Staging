@@ -42,3 +42,10 @@ def test_apply_promos_rounds_to_cent():
     """T4: result is rounded to 2 decimal places."""
     # SAVE20: 20% off 19.99 → 19.99 * 0.80 = 15.992 → rounds to 15.99
     assert apply_promos(19.99, ["SAVE20"]) == 15.99
+
+
+# T5: SAVE20 and TENOFF give different results (review finding)
+def test_save20_and_tenoff_give_distinct_results():
+    """T5: SAVE20 (20% off) and TENOFF ($10 off) produce different totals on a $100 subtotal."""
+    assert apply_promos(100.0, ["SAVE20"]) == 80.0
+    assert apply_promos(100.0, ["TENOFF"]) == 90.0
