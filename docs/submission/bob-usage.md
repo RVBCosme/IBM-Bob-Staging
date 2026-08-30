@@ -71,7 +71,8 @@ return its findings table` spawned **one** `code-reviewer` subagent (subagent ro
 `smoke-9.png`), after which Bob ran the security-auditor and test-analyst passes itself,
 sequentially, and issued `VERDICT: REOPEN`. One spawned persona plus two sequential self-run
 passes — we did not observe, and do not claim, a parallel fan-out. Leg B (run `r20260830-155356`): the
-same prompt produced <subagent-rows> and `VERDICT: REOPEN` twice — first because the T1 tests used `50.0`
+same prompt produced one spawned `code-reviewer` subagent row (8 tools, 9.0k context, 29 s;
+`bob_sessions/leg-b/review-task-code-reviewer-subagent-row.png`) followed by Bob's own passes, and `VERDICT: REOPEN` twice — first because the T1 tests used `50.0`
 for both codes (actioned: T5 added, `red -> review`), then on untested worked examples (time-boxed, recorded
 in `demo/README.md`).
 
@@ -101,7 +102,10 @@ showed exit 2 blocking and exit 0 allowing (Smokes 3/4).
 
 The requirements ticket is a real DOCX, `demo/SHOP-412.docx`, `@`-mentioned by the human in the
 spec mode (`Spec @/demo/SHOP-412.docx`); its SHA-256 is in the ledger's genesis line. XLSX was
-avoided because context mentions do not support it. Leg B: <DOCX-observed>.
+avoided because context mentions do not support it. Leg B, observed: the spec task shows `Used skill ratchet-spec` → `Explored 2 files` and then seven assumptions that quote the
+ticket's own phrases ("A code may be used once per order", "Rounded to the cent") before asking three questions, the first being
+the negative-total case (`bob_sessions/leg-b/spec-task-docx-assumptions.png`, `spec-task-negative-total-question.png`). Smoke 14
+passed: Bob read the DOCX through the `@` mention.
 
 ## watsonx.ai
 

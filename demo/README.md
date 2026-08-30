@@ -18,10 +18,11 @@ with A's first write, 7/8 with the negative total shipped. B cost ~32 minutes of
 against A's ~3 minutes and one prompt; that is the price of the receipt, not a speed claim.
 
 **Leg B, observed 2026-08-30 15:53–16:27 SGT (attempt 2; attempt 1 is `r20260830-151238`, kept as evidence, see
-below).** Spec mode read the DOCX and asked the negative-total question (<DOCX-observed>). Each of T1–T4 went
+below).** Spec mode read the DOCX and asked the negative-total question (`bob_sessions/leg-b/spec-task-docx-assumptions.png`: `Used skill ratchet-spec`, `Explored 2 files`, seven assumptions quoting the ticket's own phrases; `spec-task-negative-total-question.png`: Question 1 — "Is the floor of $0.00 the intended behaviour?" — answered `Never below zero.`). Each of T1–T4 went
 red → green on a genuinely failing test (`tests_exit=1` on every `red -> green` gate). Bob's own rules refused
 `Also add a test for this.` in green with no tool call (record 14 is a bare Stop). Review (one spawned
-`code-reviewer` plus Bob's own passes — <subagent-rows>) returned REOPEN: the T1 tests used `50.0` for both
+`code-reviewer` subagent row — 8 tools, 9.0k context, 29 s, `review-task-code-reviewer-subagent-row.png` — plus Bob's own
+security and test passes run in the parent task) returned REOPEN: the T1 tests used `50.0` for both
 codes, so SAVE20 and TENOFF were indistinguishable. The human added T5; red's test passed on first run, so the
 gate to green stayed closed and the run took `red -> review` — a transition added the same afternoon after
 attempt r20260830-140322 was stranded in `red` for exactly this reason. The second review REOPENed again on
