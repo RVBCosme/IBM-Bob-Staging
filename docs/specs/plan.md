@@ -6,3 +6,4 @@ Tasks are ordered smallest-to-largest; each maps to exactly one failing test.
 - [x] T2: Unknown or duplicate code raises `ValueError` → test: two `pytest.raises(ValueError)` blocks — `apply_promos(50.0, ["BOGUS"])` and `apply_promos(50.0, ["SAVE20", "SAVE20"])`
 - [x] T3: Total is clamped to `0.00` — never negative → test: `apply_promos(5.0, ["TENOFF"]) == 0.0`
 - [x] T4: Result is rounded to the cent → test: `apply_promos(19.99, ["SAVE20"]) == 15.99`
+- [ ] T5: SAVE20 and TENOFF give different results (review finding) -> test: `apply_promos(100.0, ["SAVE20"]) == 80.0` and `apply_promos(100.0, ["TENOFF"]) == 90.0`
