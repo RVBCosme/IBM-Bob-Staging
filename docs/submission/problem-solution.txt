@@ -41,4 +41,4 @@ the agent can reach.
 Measured result. One ticket (SHOP-412: promo codes, silent on a discount larger than the
 subtotal); a hidden eight-test referee suite hashed before either run.
 
-Results — A — unguarded Bob, one prompt: referee 7/8, then 8/8 self-patched (tainted), ≈3 minutes, task pill 0.218, blocked calls n/a; A′ — A plus one repair prompt: referee 8/8 (tainted), ~0 minutes, task pill 0.089, blocked calls n/a; B — RATCHET: referee 8/8, 32 minutes, task pill <B-pill>, blocked calls 1.
+Results — A — unguarded Bob, one prompt: referee 7/8, then 8/8 self-patched (tainted), ≈3 minutes, task pill 0.218, blocked calls n/a; A′ — A plus one repair prompt: referee 8/8 (tainted), ~0 minutes, task pill 0.089, blocked calls n/a; B — RATCHET: referee 8/8, 32 minutes, task pill 2.41 (15 tasks), blocked calls 1.

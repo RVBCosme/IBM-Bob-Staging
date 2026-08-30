@@ -47,7 +47,7 @@ subtotal); a hidden eight-test referee suite hashed before either run.
 |---|---|---|---|---|
 | A — unguarded Bob, one prompt | 7/8, then 8/8 self-patched (tainted) | ≈3 | 0.218 | n/a |
 | A′ — A plus one repair prompt | 8/8 (tainted) | ~0 | 0.089 | n/a |
-| B — RATCHET | 8/8 | 32 | <B-pill> | 1 |
+| B — RATCHET | 8/8 | 32 | 2.41 (15 tasks) | 1 |
 
 Leg A shipped −5.00, then ran the whole test tree — hidden referee included — and patched itself:
 tainted. B earned 8/8 through four red→green gates, two review verdicts (one REOPEN actioned, one

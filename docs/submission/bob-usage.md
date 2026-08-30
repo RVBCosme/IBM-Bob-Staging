@@ -115,14 +115,14 @@ https://us-south.ml.cloud.ibm.com/ml/v1/text/chat?version=2024-03-14` with
 `model_id: ibm/granite-4-h-small`, the run receipt (gates, blocked calls, write count, security
 exit) as the user message, `max_completion_tokens: 300`. Credentials come from the environment
 only. Observed: one HTTP 200 on 2026-08-30 (`demo/watsonx-verdict.png`); Granite answered in one
-sentence. Leg B receipt (13 gates, 18 writes, 1 blocked call, bandit exit 0): <Granite-leg-B>.
+sentence. Leg B receipt (13 gates, 18 writes, 1 blocked call, bandit exit 0): Granite answered `READY, residual risk: low, verify memory completeness manually.` (`demo/watsonx-verdict-leg-b.png`, one HTTP 200, 2026-08-30 16:45 SGT).
 
 ## Evidence
 
 `bob_sessions/A/` — task screenshots for Smokes 3/4, 7, 8, 9, 10/11, 12 (mode refusals, skill
 refusals, the hook block); `demo/watsonx-verdict.png`; the committed ledgers under
 `.ratchet/runs/`; `docs/specs/probe-findings.md` §7.1 for every result; `bob_sessions/leg-a/` and `bob_sessions/leg-b/`
-(task list, the `code-reviewer` subagent row, a task's context/pill header, the Bobcoin gauge); the two
+(the spec task reading the DOCX and asking the negative-total question, the `code-reviewer` subagent row, both REOPEN verdicts, the memory task, Agent-mode `execute_command` refused in review and blocked in `done` — `Command cancelled pytest`; every task header shows its context counter and pill); the two
 leg-B ledgers `.ratchet/runs/r20260830-151238/` (attempt 1, does not verify — see `demo/README.md`) and
 `.ratchet/runs/r20260830-155356/` (the recorded run, verifies, 52 records).
 
