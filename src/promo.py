@@ -6,6 +6,12 @@ _FIXED_CODES = {"TENOFF": 10.00}
 
 def apply_promos(subtotal: float, codes: list[str]) -> float:
     """Return subtotal after applying promo codes. Percent discounts are applied first."""
+    known = _PERCENT_CODES.keys() | _FIXED_CODES.keys()
+    for code in codes:
+        if code not in known:
+            raise ValueError(f"Unknown promo code: {code!r}")
+    if len(codes) != len(set(codes)):
+        raise ValueError("Duplicate promo codes are not allowed")
     total = subtotal
     # Apply percent codes first (regardless of input order)
     for code in codes:

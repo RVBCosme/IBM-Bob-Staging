@@ -18,3 +18,13 @@ def test_apply_promos_basic_cases():
     # both stacked, % applied first regardless of list order
     # SAVE20 first: 50.00 * 0.80 = 40.00, then TENOFF: 40.00 - 10.00 = 30.00
     assert apply_promos(50.0, ["TENOFF", "SAVE20"]) == 30.0
+
+
+# T2: Unknown or duplicate code raises ValueError
+def test_apply_promos_invalid_codes():
+    """T2: unknown and duplicate codes must raise ValueError."""
+    with pytest.raises(ValueError):
+        apply_promos(50.0, ["BOGUS"])
+
+    with pytest.raises(ValueError):
+        apply_promos(50.0, ["SAVE20", "SAVE20"])
