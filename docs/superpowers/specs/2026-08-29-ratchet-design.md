@@ -380,6 +380,9 @@ This is what satisfies the brief's fourth named feature, "document understanding
 **Ticket:** promo codes at checkout, deliberately underspecified on what happens when the discount
 exceeds the subtotal. Unguarded Bob ships `total = subtotal - discount` → a $5 cart with `TENOFF`
 totals **−$5.00**. The checkout pays the customer. Visually unmistakable in three seconds.
+Observed 2026-08-30 (leg A): the first write did return −5.0 (Bob's own line, `demo/stills/leg-a-transcript.png`), but Bob
+then ran `python -m pytest --tb=short -q` over the whole tree, read the hidden referee's expectation and patched
+`max(total, 0.0)` before stopping — the shipped file passes 8/8, tainted (`demo/README.md`).
 
 **Legs:** A (unguarded) · A′ (A + the *unguarded repair pass*) · B (RATCHET).
 Leg A caveat (2026-08-30): renaming `state.json`, `.bob/rules` and `AGENTS.md` does **not** remove the six workspace skills under `.bob/skills`; their descriptions mention RATCHET phases and Bob auto-loaded `ratchet-spec` in Agent mode (Smoke 12), so leg A may still get RATCHET behaviour unless `.bob/skills` is renamed for the run too (tracked; `git checkout main` restores it).

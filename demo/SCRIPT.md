@@ -16,6 +16,8 @@ Every number in angle brackets comes from `demo/README.md` after Tasks 14 and 15
 2:25-2:45  Receipt table A / A' / B. "N blocked calls" is the number the ledger proves.
 2:45-3:00  How Bob was used: modes, skills, personas, hooks, subagents. All config, in the repo.
 ```
+Observed 2026-08-30: leg A shipped a self-patched floor and passed 8/8 (tainted) — rows 0:45 and 0:55 below supersede
+the 0:45 beat; the stills are Bob's −5.0 line (`leg-a-transcript.png`) and `8 passed` (`leg-a-referee.png`).
 
 ## Shot list
 
@@ -23,8 +25,8 @@ Every number in angle brackets comes from `demo/README.md` after Tasks 14 and 15
 |---|---|---|
 | 0:00 | Title card, then `demo/SHOP-412.docx` open | "Agents write code for free; the cost moved to trusting it. Prompts ask. Nobody checks." |
 | 0:25 | `demo/stills/karpathy-slide.html` full screen | "Four principles everyone agrees with. Nobody can prove they were followed. RATCHET makes each one a gate with a receipt." |
-| 0:45 | `demo/stills/leg-a-transcript.png` — Bob's own line *"should return 0.0, not -5.0"* and the `python -m pytest --tb=short -q` row | "Unguarded Bob, one prompt. Its first total for a five-dollar cart with TENOFF was minus five — the checkout pays the customer. It never asked the ticket's question. It found the bug by running the whole test tree, hidden referee included, and patched it." (Observed 2026-08-30; the still shows exactly this.) |
-| 0:55 | `demo/stills/leg-a-referee.png` — `8 passed` | "The hidden referee suite, hashed before either run: eight of eight — because the answer key was on the machine and nothing stopped a terminal. That number is tainted, and the receipt table says so. In leg B no phase can run a terminal at all." |
+| 0:45 | `demo/stills/leg-a-transcript.png` — Bob's own line *"should return 0.0, not -5.0"* and the `python -m pytest --tb=short -q` row | "Unguarded Bob, one prompt. Five-dollar cart, TENOFF: minus five — the checkout pays the customer. It never asked. It ran the whole tree, referee included, and patched." (28 words, ~11 s; observed 2026-08-30 — the still shows Bob's sentence, not the file.) |
+| 0:55 | `demo/stills/leg-a-referee.png` — `8 passed` | "Hashed before either run, hidden from file tools — not from a terminal. Eight of eight, tainted; the table says so. Leg B: no phase can run a terminal." (28 words, ~11 s) |
 | 1:05 | Bob, `1 - Ratchet Spec`, `Spec @/demo/SHOP-412.docx` | "Phase one. The mode can write specs and nothing else. It reads the ticket and asks the question the ticket dodged." Answer on screen: `Never below zero.` |
 | 1:20 | Terminal: `python -m rx gate --to red` | "Only a human opens a gate. The gate is a script, and it writes the receipt." |
 | 1:25 | Bob, `2 - Ratchet Red`, `Next task` → a failing test appears | "Red can write a test and cannot run it. No terminal in any phase." |

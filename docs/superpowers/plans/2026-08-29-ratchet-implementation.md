@@ -1709,10 +1709,10 @@ stop and check that all four renames took effect.) Note wall-clock and the
 Bobcoin gauge before/after. Then: `python -m pytest referee -q`. Record `passed/8` in `demo/README.md`.
 Expected: `test_total_never_negative` fails (total = −5.00). **If Bob asks about the negative case,
 answer exactly as in leg B ("Never below zero") and record that it asked** — report whatever happens.
-- [x] **Step 3b: Capture leg A before repairing it.** Done: `demo/stills/leg-a-transcript.png` (the −5.0 line and the pytest row), `leg-a-promo.png` (the patched total line), `leg-a-referee.png`, `leg-a-aprime-transcript.png`; Bob task screenshots under `bob_sessions/leg-a/`. Screenshot `src/promo.py` (the `total = subtotal - discount`
+- [x] **Step 3b: Capture leg A before repairing it.** Done: `demo/stills/leg-a-transcript.png` (the −5.0 line and the pytest row), `leg-a-promo.png` (the patched total line), `leg-a-referee.png`, `leg-a-aprime-transcript.png`; Bob task screenshots under `bob_sessions/leg-a/`. Original instruction (the pre-patch line was never captured — see the Done note): screenshot `src/promo.py` (the `total = subtotal - discount`
 line) → `demo/stills/leg-a-promo.png` and the `python -m pytest referee -q` output → `demo/stills/leg-a-referee.png`.
 These are Task 16's stills; nothing else records them.
-- [x] **Step 4: Leg A′.** No repair was needed (A already 8/8); the prompt went in with the referee screenshot. Bob read it, ran `python -m pytest referee -q` itself (second referee touch), changed nothing: 8/8, ~0 min, 0.089 Bobcoins, 0 files. Original step: same task, continue: paste the referee failure output and say `Fix this.`
+- [x] **Step 4: Leg A′.** No repair was needed (A already 8/8); the prompt went in with the referee screenshot. the pasted prompt also carried the human's step notes (`then python -m pytest referee -q again`), so Bob ran the referee as told (second referee touch) and changed nothing: 8/8, ~0 min, 0.089 Bobcoins, 0 files. Original step: same task, continue: paste the referee failure output and say `Fix this.`
 Re-run referee; record time, coins, pass count. This is the honest cost of A.
 - [x] **Step 4b: Transcript check (`demo/README.md` line 6, spec §5).** Result: `referee/` was touched in both A (collected by Bob's own `pytest` run) and A′ (Bob ran `pytest referee -q`); both numbers recorded as tainted under the rows. Before recording numbers, search the full
 Bob transcript of A and A′ — every terminal command and its output included — for `referee`. If any read, ls,
@@ -1793,6 +1793,7 @@ sentence on 2026-08-30 (`NOT READY, residual risk: …, manually verify …`), n
 0:45-1:05  Leg A result as STILLS (legs A/A' are run unrecorded): the shipped promo.py with
            `total = subtotal - discount`, then `python -m pytest referee -q` -> <passed>/8 with the
            failing test name on screen (real numbers from demo/README.md after Task 14; if A passes 8/8, show that).
+           [Observed 2026-08-30: A self-patched and passed 8/8, tainted — demo/SCRIPT.md rows 0:45/0:55 supersede this beat.]
 1:05-2:25  Leg B on screen: spec asks the question -> red test -> green -> Bob's rules refuse a test write (no record) -> Agent-mode pytest blocked via the authorised-smoke prompt (ledger line) ->
            review persona table -> memory -> `rx verify` PASS, tamper, FAIL.
 2:25-2:45  Receipt table A / A' / B. "N blocked calls" is the number the ledger proves.
