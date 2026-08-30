@@ -85,6 +85,7 @@ No phase mode holds `execute`, `mode`, `subtask`, `mcp` or `workflow`.
 | `red → green` | `pytest tests` must **fail** (a passing or empty suite keeps the gate closed); hash of `tests/` recorded |
 | `green → red` | transition legal (next task) |
 | `green → review` | `pytest tests` must pass; `tests/` unchanged since the red gate; `bandit -r src` runs and its exit code is recorded |
+| `red → review` | only when the red test already passes because an earlier green over-delivered (the gate to green stays closed): `pytest tests` must pass; hash of `tests/` recorded; `bandit` runs. Added 2026-08-30 during leg B — see `demo/README.md` |
 | `review → red` | reopen (the debug path) |
 | `review → memory`, `memory → done` | transition legal; `done` additionally requires the ledger to verify |
 

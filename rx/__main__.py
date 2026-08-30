@@ -95,9 +95,14 @@ def cmd_gate(a):
         r = run_tests()
         if r.returncode != 0:
             sys.exit("GATE CLOSED: tests fail\n" + r.stdout[-2000:])
-        last_red = [x for x in ledger.read(ledger_path(s)) if x["event"] == "gate" and x["to"] == "green"][-1]
-        if sha_tree(ROOT / "tests") != last_red["tests_sha"]:
-            sys.exit("GATE CLOSED: tests/ changed since the red gate")
+        if frm == "red":
+            # the red test already passes (an earlier green over-delivered): record the tests/ hash
+            # red leaves behind; there was no green to compare against
+            rec["tests_sha"] = sha_tree(ROOT / "tests")
+        else:
+            last_red = [x for x in ledger.read(ledger_path(s)) if x["event"] == "gate" and x["to"] == "green"][-1]
+            if sha_tree(ROOT / "tests") != last_red["tests_sha"]:
+                sys.exit("GATE CLOSED: tests/ changed since the red gate")
         sec = subprocess.run(SEC_CMD, cwd=ROOT, capture_output=True, text=True)
         (RX / "runs" / s["run"] / "security.txt").write_text(sec.stdout + sec.stderr, encoding="utf-8")
         rec["tests_exit"], rec["security_exit"] = 0, sec.returncode

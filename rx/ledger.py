@@ -9,8 +9,10 @@ from pathlib import Path
 KEY_PATH = Path.home() / ".ratchet" / "key"
 
 # Legal phase transitions. review->red is the debug path: a bug is a missing test.
+# red->review (added 2026-08-30, leg B): the red test already passes because an earlier green
+# over-delivered; there is nothing for green to do, so the run may go straight to review.
 TRANSITIONS = {
-    ("spec", "red"), ("red", "green"), ("green", "red"), ("green", "review"),
+    ("spec", "red"), ("red", "green"), ("green", "red"), ("green", "review"), ("red", "review"),
     ("review", "red"), ("review", "memory"), ("memory", "done"),
 }
 

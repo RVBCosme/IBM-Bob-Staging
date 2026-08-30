@@ -287,10 +287,12 @@ those `rx/gate.py`, `rx/record.py` and `rx/ledger.py` emit.)
   record = FAIL. Exempt: `.ratchet/` (the ledger itself), `bob_sessions/` (screenshots taken during
   a run) and `probe.log` — `IGNORE` in `rx/record.py`.
 
-`python -m rx verify` asserts: init first · every transition legal (spec→red, red→green,
+`python -m rx verify` asserts: init first · every transition legal (spec→red, red→green|review,
 green→red|review, review→red|memory, memory→done) · no `seq` gaps · chain unbroken · every MAC
 matches · no Stop record with unrecorded changes. Red re-entry after review is legal (that is the
-debug path).
+debug path). red→review was added 2026-08-30 during leg B: T1's green implemented the whole spec, so
+the red tests for T2–T4 passed on first run and the gate to green (correctly) stayed closed — without
+red→review the run was stranded in `red`. It requires `pytest tests` to pass and records the `tests/` hash.
 
 ### 4.5 Phase coverage vs. the original request
 
