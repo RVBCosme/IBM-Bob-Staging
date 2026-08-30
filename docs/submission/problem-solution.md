@@ -1,7 +1,5 @@
 # RATCHET — problem and solution
 
-<!-- Numbers in <angle brackets> are filled from demo/README.md after Tasks 14 and 15. -->
-
 **Problem.** AI coding agents made *writing* code nearly free, so the bottleneck moved to
 *trusting* it. Agents report success they never verified, skip tests and edit outside the agreed scope. The existing answers are prompts. A prompt *asks* the
 agent to follow TDD; a confident model agrees and then doesn't. Nothing checks, so a human

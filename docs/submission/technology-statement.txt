@@ -1,0 +1,7 @@
+RATCHET is built on IBM Bob (IDE 1.126.0, Bob 2.0.3) and IBM watsonx.ai.
+
+IBM Bob: five workspace custom modes (.bob/custom_modes.yaml), one per SDLC phase, each granted only the tool groups it needs and an edit fileRegex for one directory; six workspace skills (.bob/skills) loaded from the modes; always-on rules (.bob/rules); three read-only personas (.bob/agents) spawned as subagents from the review mode; four lifecycle hooks (PreToolUse, PostToolUse, Stop, SessionStart) installed by our installer into Bob's global settings, with the PreToolUse hook blocking every terminal command and every write outside the current phase; document understanding through an @-mentioned DOCX requirements ticket.
+
+IBM watsonx.ai: tools/watsonx_summary.py calls the watsonx.ai chat API (ibm/granite-4-h-small) with the run's HMAC-verified ledger receipt and returns a one-line readiness verdict.
+
+Everything else is a small standard-library Python package (rx) that keeps the phase on disk, opens gates, and writes and verifies the ledger without a model in the loop.

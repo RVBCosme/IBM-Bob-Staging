@@ -1,7 +1,5 @@
 # How IBM Bob was used
 
-<!-- Observations marked <fill> are completed from leg B (plan Task 15) before submission. -->
-
 Everything below is configuration committed in this repository, except two things a fresh clone
 does not inherit: the four hook entries, which `python -m rx init` writes into the global
 `%USERPROFILE%\.bob\settings\settings.json` (a copy is committed as `.bob/settings.example.json`),
