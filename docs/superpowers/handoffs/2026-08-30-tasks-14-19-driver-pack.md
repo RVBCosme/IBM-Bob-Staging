@@ -1,4 +1,4 @@
-# Driver pack — Tasks 14 → 15 → 16–19 (2026-08-30, from ~04:00 SGT)
+# Driver pack — Tasks 14 → 15 → 16–19 (2026-08-30, from ~03:40 SGT; verified again 12:45 SGT)
 
 The coordinating session's batch. Everything that could be done without a human at the Bob IDE is
 done and committed (§1). What remains needs you at the keyboard; this file is the exact sequence.
@@ -7,7 +7,7 @@ thing you paste into Bob**; everything under **By hand** is UI you do yourself; 
 PowerShell in `C:\ratchet`. Screenshots: `Win+Shift+S` (Bob's own screenshot command captures the
 wrong monitor).
 
-**Deadline — confirmed 2026-08-30 ~03:35 SGT on the hackathon platform**
+**Deadline — confirmed 2026-08-30 ~03:25 SGT on the hackathon platform**
 (`https://compete.082601.watsonx-challenge.ibm.com/competitions/pre-techxchange`, logged in):
 **Submissions close August 30, 2026, 10:00 AM ET = 22:00 SGT today.** The plan's "≥ 2 h before"
 rule puts the cut-off at **20:00 SGT**. After 22:00 SGT no deliverable (video, repo) may change or
@@ -30,7 +30,7 @@ challenge ending Aug 31 — ignore it.)
 
 - Verified both earlier reports: tree clean, `pytest rx_tests` 30 passed, `rx verify` PASS 19, Task 14 prerequisite (`git ls-files` lists `.ratchet/state.json`, `.bob/rules`, `.bob/skills`, `AGENTS.md`).
 - **Task 16:** `demo/SCRIPT.md` (the plan's beat block verbatim + a shot list with the exact prompts and narration) and `demo/stills/karpathy-slide.html` (open in a browser, F11 — that is the 0:25 beat).
-- **Task 18 drafts:** `README.md` (complete, no numbers), `docs/submission/problem-solution.md` and `docs/submission/bob-usage.md` (placeholders `<…>` / `<fill: …>`). After Task 15 Step 8, paste the numbers to the coordinating session and it fills both submission files plus `demo/README.md` in one commit. problem-solution is at the ≤ 500-word limit already (≈499 markdown-stripped, 541 by `wc -w`): the platform field takes plain text, so it is pasted as prose (table → sentences) and counted with `wc -w` on that text — cut before filling the two bracketed sentences.
+- **Task 18 drafts:** `README.md` (complete, no numbers), `docs/submission/problem-solution.md` and `docs/submission/bob-usage.md` (placeholders `<…>` / `<fill: …>`). After Task 15 Step 8, paste the numbers to the coordinating session and it fills both submission files plus `demo/README.md` in one commit. problem-solution is at the ≤ 500-word limit already (exactly 500 by a strict count — tokens containing a letter or digit, HTML comment excluded — and 557 by `wc -w` on the committed file): it is pasted into the form as prose (table → sentences, no markdown — correct whether or not the field renders markdown) and counted with `wc -w` on that text — cut before filling the two bracketed sentences.
 - **Task 19 Step 0 done** (deadline, form, team, template — see header and §5). The Task 19 secret grep now excludes `README.md`, whose watsonx paragraph names the `WATSONX_APIKEY` *variable*; run exactly as in §5 it returns nothing.
 - `.bobignore` now also hides `docs/specs/probe-findings.md` (inside the spec mode's writable directory — Bob would read a 200-line probe report as if it were a spec) and `.pytest_cache/`, `__pycache__/` (a `pytest referee` run in leg A would otherwise leave the hidden suite's node ids where Bob's read tools can see them in leg B). Both are committed before `ab-start`, so both legs share them. Spec §4.1 and plan Task 0 list the same eight lines.
 - Plan Task 14 Step 5 also checks out `demo/stills` from `leg-a`; plan Task 15 Step 3 now says to tick the finished task in `docs/specs/plan.md` and commit before each `gate --to red` (the red skill picks the first *unchecked* task; the gate never edits the plan).
@@ -119,8 +119,9 @@ Get-Content demo\canary\allow.json | cmd /c C:\ratchet\.bob\hooks\gate.cmd; Writ
 ```
 Expected while `state.json` is in phase `spec` (the case before Step 1): `RATCHET blocked
 write_file on src/x.py: outside spec scope` + `exit=2`, then `exit=0`. In any other phase (a retake
-after an aborted run) both fixtures exit 2 with `outside <phase> scope` — that still proves the hook
-fires. The deny lands in whichever run `state.json` names — before Step 1 that is the old
+after an aborted run) `allow.json` exits 2 with `outside <phase> scope`, and `deny.json` exits 2 too —
+except in phase `green`, where `src/x.py` is inside the phase scope and it exits 0 (`rx/policy.py`). Either
+way the hook fires. The deny lands in whichever run `state.json` names — before Step 1 that is the old
 throwaway ledger, which Step 1 commits; after Step 1 it would add a deny to leg B's own ledger, so
 never run the canary after `rx init`. Smoke 12 only needs re-running inside Bob if `settings.json`
 changed since Task 7 — it has not.
@@ -272,10 +273,13 @@ git add bob_sessions; git commit -m "evidence: bob sessions"
   git grep -iE "apikey|api_key|Bearer [A-Za-z0-9]" -- ':!docs' ':!tools/watsonx_summary.py' ':!README.md'   # must print nothing (README.md only names the WATSONX_APIKEY variable)
   git push origin main
   ```
-  Flip `RVBCosme/IBM-Bob-Staging` to Public (GitHub → Settings → Danger zone; `gh` is not installed).
+  `RVBCosme/IBM-Bob-Staging` is **already Public** (GitHub API `visibility: public`, checked 2026-08-30 03:34 and
+  12:35 SGT) — every push is world-readable now, so run the grep above before **every** push; just confirm the
+  visibility on GitHub → Settings → Danger zone (`gh` is not installed).
   Open the repo in a private window; confirm `bob_sessions/` and `.ratchet/runs/` are there.
-- **19, by hand, on the platform** (`…/competitions/pre-techxchange/teams` → Submissions): confirm
-  the team member list; paste the video URL; paste the problem/solution statement as plain text
+- **19, by hand, on the platform** (`https://compete.082601.watsonx-challenge.ibm.com/competitions/pre-techxchange`:
+  My Team → Submissions): confirm
+  the team member list; paste the video URL; paste the problem/solution statement as prose
   (≤ 500 words); paste the technology statement (Bob + watsonx.ai); paste the public repo URL; add
   the repo and video as optional links; Submit. Read the AI Submission Advisor email; if anything is
   flagged "Needs a second look", fix it and **resubmit all four deliverables** — the latest

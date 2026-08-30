@@ -441,7 +441,7 @@ command lines.
 | 14 | PDF `@`-mention returns text | PDF/DOCX only |
 | 15 | watsonx: IAM → model specs → one real 200 | Cut the watsonx leg |
 
-Before every take: re-run the Task 7 Step 2 canary (`gate.cmd` exists, deny fixture exits 2). After
+Before every take, and only before that take's `rx init`: re-run the Task 7 Step 2 canary (`gate.cmd` exists, deny fixture exits 2 in phase `spec`; the deny it writes lands in whichever run `state.json` names). After
 **any** `settings.json` edit: also re-run 12 inside Bob — with the live gate (probe hooks removed in Task 7)
 rows 3 and 4 cannot be run as written; the canary is 3+4 in the terminal and Smoke 12 (one blocked write, one
 allowed write in built-in Agent mode) is 3+4 inside Bob.

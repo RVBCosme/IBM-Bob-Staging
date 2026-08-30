@@ -1,4 +1,4 @@
-# Next-session prompt — RATCHET, Tasks 14 → 19 (written 2026-08-30 ~04:30 SGT)
+# Next-session prompt — RATCHET, Tasks 14 → 19 (written 2026-08-30 ~03:40 SGT; consumed and re-verified by session 5 at ~12:45 SGT — see §6 items 23–25)
 
 Paste everything below the line into the new session as the first message.
 
@@ -11,7 +11,7 @@ prompt, then the basis documents in §1 **before doing anything else**. Do not r
 already recorded; do not start any work that burns Bobcoins or needs the human at the IDE without
 handing them the exact steps from the driver pack.
 
-## 0. Hard facts (verified 2026-08-30 ~04:20 SGT)
+## 0. Hard facts (verified 2026-08-30 ~03:40 SGT, re-verified ~12:45 SGT)
 
 - **Event:** IBM TechXchange 2026 Pre-conference Dev Day Hackathon —
   `https://compete.082601.watsonx-challenge.ibm.com/competitions/pre-techxchange`.
@@ -24,8 +24,7 @@ handing them the exact steps from the driver pack.
   (throwaway run `r20260830-005639`). OneDrive mirror of `docs/superpowers/{plans,specs,handoffs}`
   re-synced and byte-identical.
 - **Platform state:** team GameTime 1/5 members, no submission yet, team IBM Cloud account already
-  requested. Submission form = four required fields (video URL; problem/solution ≤ 500 words, plain
-  text; technology statement Bob + watsonx; public repo URL "including exported IBM Bob report") +
+  requested. Submission form = four required fields (video URL; problem/solution ≤ 500 words; technology statement Bob + watsonx; public repo URL "including exported IBM Bob report") +
   optional links; drafts allowed; a resubmission replaces everything; AI Submission Advisor email
   follows. Template repo optional (`github.com/watsonxhackathon/ibm-hackathon-template`).
 - **Machine:** Windows 11, PowerShell 5.1, Python 3.10 at `python`, Bob IDE 1.126.0+bob2.0.3,
@@ -80,7 +79,7 @@ one, §0 of the driver pack) and the spec's §11 verification record.
 | 3 | **Task 17 — evidence** | human (screenshots) | driver pack §4 | `bob_sessions/A/*.png` (task list, subagent row, context window, Bobcoin view, task session summary/export), commit `evidence: bob sessions` | files present; no key text in any exported transcript | plan Task 17; platform: "task session summary screenshots" |
 | 4 | **Task 18 — fill the numbers** | you | `demo/README.md` rows, `rx report`, review verdict, verify count | filled `docs/submission/problem-solution.md` and `bob-usage.md`; a plain-text copy of problem-solution for the form | strict count ≤ 500 **and** `wc -w` of the plain-text version ≤ 500; no `<…>` left; spec §2.3 respected; commit | plan Task 18; spec §2.2, §2.3, §5 |
 | 5 | **Task 16 — video** | human records; you check the script | `demo/SCRIPT.md`, stills, leg-B take | YouTube unlisted URL in `demo/README.md` | ≤ 3:00, ≥ 90 s of Bob on screen, narration, Bob usage shown | plan Task 16; platform video rules |
-| 6 | **Task 19 — submit** | human on the platform; you run the checks | driver pack §5 | repo Public and pushed; four fields submitted; advisor email read | the Task 19 secret grep (§5) prints nothing; `bob_sessions/` and `.ratchet/runs/` visible in a private window; submitted by 20:00 SGT | plan Task 19 (Step 0 done); platform "Complete the hackathon" |
+| 6 | **Task 19 — submit** | human on the platform; you run the checks | driver pack §5 | repo confirmed Public (it already is — GitHub API, 03:34 SGT) and pushed; four fields submitted; advisor email read | the Task 19 secret grep (§5) prints nothing; `bob_sessions/` and `.ratchet/runs/` visible in a private window; submitted by 20:00 SGT | plan Task 19 (Step 0 done); platform "Complete the hackathon" |
 | 7 | After each commit: re-sync the OneDrive mirror (`C:\Users\Rene Vincent\OneDrive\Desktop\hello\HACKATHON\IBM Bob\docs\superpowers\{plans,specs,handoffs}`), push, update the memory file's "State at …" paragraph | you | — | mirror `cmp` identical; `origin/main` = HEAD | — | memory `ratchet-hackathon-context` |
 
 ## 4. Guard-rails (never break)
@@ -119,7 +118,7 @@ Found and fixed on 2026-08-30 (all in `d508141` unless noted):
 11. `pytest referee` leaves the hidden node ids in `.pytest_cache/` where Bob's read tools could see them in leg B → `.pytest_cache/`, `__pycache__/` in `.bobignore` + `Remove-Item` after leg A.
 12. `rx gate` never edits `docs/specs/plan.md`; the red skill picks the first *unchecked* task → the human ticks the task and commits before every `gate --to red` (plan Task 15 Step 3, README, driver pack).
 13. Auto-approve toggles are behind the **Permissions** button beside the Mode selector, not in Settings.
-14. The canary appends a deny record to whichever run `state.json` names → run it only before `rx init`; in a non-`spec` phase both fixtures exit 2.
+14. The canary appends a deny record to whichever run `state.json` names → run it only before `rx init`; in a non-`spec` phase `allow.json` exits 2, and `deny.json` exits 2 except in `green`, where `src/x.py` is in scope and it exits 0.
 15. Unstaged renames show as `D` + `??` lines in `git status`, not as renames.
 16. `git checkout leg-a -- demo/README.md` alone strands the leg-A stills → `demo/stills` added.
 17. README's ledger key list was the spec's illustrative `deny` shape; corrected to per-event keys (`gate` has no `phase`; `init` carries `phase`, `run`, `doc`, `doc_sha256`; `stop` carries `changed`, `unrecorded`).
@@ -127,7 +126,12 @@ Found and fixed on 2026-08-30 (all in `d508141` unless noted):
 19. `docs/specs/probe-findings.md` sat inside the spec mode's writable directory → hidden via `.bobignore`.
 20. `problem-solution.md` is exactly at the 500-word strict limit with placeholders; the platform field is plain text, so the pasted prose must be re-counted with `wc -w` and trimmed before the two bracketed sentences are filled.
 21. Git on this machine has `core.autocrlf` warnings (LF→CRLF) on every commit — harmless; ledger lines are compared as bytes only via the `.bak` restore.
-22. The committed smoke ledger's genesis line hashes `demo/placeholder.txt` (Task 7 throwaway), not the DOCX — README's layout table now says so.
+22. The committed smoke ledger's genesis line hashes `demo/placeholder.txt` (Task 7 throwaway), not the DOCX — README's layout table says so.
+
+Found and fixed by session 5 on 2026-08-30 ~12:45 SGT (from the second pass wf_6dd01dff-155, which never finished — 36 of 48 agents returned, findings tallied by hand from its journal):
+23. `RVBCosme/IBM-Bob-Staging` is **already public** (GitHub API `visibility: public`) — there is no flip to do, and the secret grep must run before **every** push, not only the last one.
+24. `demo/canary/deny.json` (`src/x.py`) exits 0, not 2, when `state.json` is in phase `green` — driver pack §3 pre-flight, plan Task 15 and spec §7 footer corrected; `demo/SCRIPT.md` now carries the "only before `rx init`" rule and the missing `Copy-Item` before the tamper.
+25. The previous session's clock ran ~50 min ahead of the commit timestamps ("~04:30 SGT" was written at 03:40); "541 by `wc -w`" was 557; the platform field type ("plain text") was never recorded — wording softened to "paste as prose". The OneDrive mirror was missing the two older hand-offs; all three `handoffs/` files are now copied.
 
 Open / unverified (report whatever happens):
 - Smoke 14 (DOCX `@`-mention) has no recorded result — leg B Step 2 is its first test.
