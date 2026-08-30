@@ -117,8 +117,9 @@ sentence. Leg B receipt (13 gates, 18 writes, 1 blocked call, bandit exit 0): Gr
 
 ## Evidence
 
-`bob_sessions/A/` — task screenshots for Smokes 3/4, 7, 8, 9, 10/11, 12 (mode refusals, skill
-refusals, the hook block); `demo/watsonx-verdict.png`; the committed ledgers under
+`bob_sessions/` — 36 Bob task session summaries, one PNG per task used for this project, named
+`gametime_task<NN>_<description>_summary.png` and indexed in `bob_sessions/README.md` (tasks 01–18 the configuration
+smokes, 19–20 leg A, 21–36 leg B); the subfolders `A/`, `leg-a/`, `leg-b/` hold the earlier captures of the same sessions; `demo/watsonx-verdict.png`; the committed ledgers under
 `.ratchet/runs/`; `docs/specs/probe-findings.md` §7.1 for every result; `bob_sessions/leg-a/` and `bob_sessions/leg-b/`
 (the spec task reading the DOCX and asking the negative-total question, the `code-reviewer` subagent row, both REOPEN verdicts, the memory task, Agent-mode `execute_command` refused in review and blocked in `done` — `Command cancelled pytest`; every task header shows its context counter and pill); the two
 leg-B ledgers `.ratchet/runs/r20260830-151238/` (attempt 1, does not verify — see `demo/README.md`) and
