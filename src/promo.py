@@ -21,4 +21,4 @@ def apply_promos(subtotal: float, codes: list[str]) -> float:
     for code in codes:
         if code in _FIXED_CODES:
             total -= _FIXED_CODES[code]
-    return max(0.0, total)
+    return round(max(0.0, total), 2)

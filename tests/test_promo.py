@@ -35,3 +35,10 @@ def test_apply_promos_clamps_to_zero():
     """T3: result is clamped to 0.00 when discount exceeds subtotal."""
     # TENOFF subtracts $10 from a $5 subtotal; result must be 0.00, not -5.00
     assert apply_promos(5.0, ["TENOFF"]) == 0.0
+
+
+# T4: Result is rounded to the cent
+def test_apply_promos_rounds_to_cent():
+    """T4: result is rounded to 2 decimal places."""
+    # SAVE20: 20% off 19.99 → 19.99 * 0.80 = 15.992 → rounds to 15.99
+    assert apply_promos(19.99, ["SAVE20"]) == 15.99
