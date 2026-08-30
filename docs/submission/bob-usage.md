@@ -70,7 +70,10 @@ twice as too trivial; `Spawn the code-reviewer subagent to review src/cart.py ag
 return its findings table` spawned **one** `code-reviewer` subagent (subagent row, 8 tools, 43 s;
 `smoke-9.png`), after which Bob ran the security-auditor and test-analyst passes itself,
 sequentially, and issued `VERDICT: REOPEN`. One spawned persona plus two sequential self-run
-passes — we did not observe, and do not claim, a parallel fan-out. <fill: leg B review outcome.>
+passes — we did not observe, and do not claim, a parallel fan-out. Leg B (run `r20260830-155356`): the
+same prompt produced <subagent-rows> and `VERDICT: REOPEN` twice — first because the T1 tests used `50.0`
+for both codes (actioned: T5 added, `red -> review`), then on untested worked examples (time-boxed, recorded
+in `demo/README.md`).
 
 ## Lifecycle hooks — global `%USERPROFILE%\.bob\settings\settings.json`
 
@@ -98,7 +101,7 @@ showed exit 2 blocking and exit 0 allowing (Smokes 3/4).
 
 The requirements ticket is a real DOCX, `demo/SHOP-412.docx`, `@`-mentioned by the human in the
 spec mode (`Spec @/demo/SHOP-412.docx`); its SHA-256 is in the ledger's genesis line. XLSX was
-avoided because context mentions do not support it. <fill: how Bob read the DOCX in leg B.>
+avoided because context mentions do not support it. Leg B: <DOCX-observed>.
 
 ## watsonx.ai
 
@@ -108,14 +111,16 @@ https://us-south.ml.cloud.ibm.com/ml/v1/text/chat?version=2024-03-14` with
 `model_id: ibm/granite-4-h-small`, the run receipt (gates, blocked calls, write count, security
 exit) as the user message, `max_completion_tokens: 300`. Credentials come from the environment
 only. Observed: one HTTP 200 on 2026-08-30 (`demo/watsonx-verdict.png`); Granite answered in one
-sentence. <fill: leg B verdict.>
+sentence. Leg B receipt (13 gates, 18 writes, 1 blocked call, bandit exit 0): <Granite-leg-B>.
 
 ## Evidence
 
 `bob_sessions/A/` — task screenshots for Smokes 3/4, 7, 8, 9, 10/11, 12 (mode refusals, skill
 refusals, the hook block); `demo/watsonx-verdict.png`; the committed ledgers under
-`.ratchet/runs/`; `docs/specs/probe-findings.md` §7.1 for every result. <fill: leg B task list,
-context-window and Bobcoin screenshots.>
+`.ratchet/runs/`; `docs/specs/probe-findings.md` §7.1 for every result; `bob_sessions/leg-a/` and `bob_sessions/leg-b/`
+(task list, the `code-reviewer` subagent row, a task's context/pill header, the Bobcoin gauge); the two
+leg-B ledgers `.ratchet/runs/r20260830-151238/` (attempt 1, does not verify — see `demo/README.md`) and
+`.ratchet/runs/r20260830-155356/` (the recorded run, verifies, 52 records).
 
 ## Wording we hold ourselves to
 

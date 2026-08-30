@@ -9,9 +9,32 @@ terminal, so its transcript is checked for any `referee` access.
 |-----|----------|---------|---------|----------|---------------|---------------|
 | A   | Default Agent mode, one prompt (gate off — `state.json` renamed, hooks exit 0; rules, skills and router removed) | 7/8 on the first write (inferred: Bob's "One test failure" of 38, and the 30 `rx_tests` do not touch promo — `test_total_never_negative`), then 8/8 after Bob's self-patch — **tainted** (see below) | not timed (≈3; screenshots 12:50–12:53 SGT) | 0.218 | 1 (`src/promo.py`: written, then patched by Bob) | n/a |
 | A'  | A + one repair prompt with the referee failure pasted in — **no repair was needed**, A already passed; the prompt went in as a new Bob task with the referee screenshot (then at `demo/leg-a-referee.png`, moved to `demo/stills/` before commit) and the human's own step notes, which said `then python -m pytest referee -q again`. Bob read the screenshot, ran the referee as told, changed nothing | 8/8 (tainted, same reason) | ~0 (A + A′ ≈ 3) | 0.089 (A + A′ = 0.307; Bob's own summary said "0 coins") | 0 | n/a |
-| B   | RATCHET gates | /8 | | | | |
+| B   | RATCHET gates — run `r20260830-155356`, 52 ledger records, `rx verify` PASS; spec → 4 × (red → green) → review **REOPEN** (actioned: T5 test, then `red → review`) → review **REOPEN** again (time-boxed, not actioned) → memory (5 files) → done | **8/8** — the referee was never reachable: no phase can run a terminal, and the human ran it after `done` | 31.8 (ledger: `init` 15:53:56 → `memory -> done` 16:25:41 SGT) | <B-pill> (gauge 80 % → <B-end>) | 10 (`docs/specs/spec.md`, `plan.md`, `tests/test_promo.py`, `src/promo.py`, `src/__init__.py`, 5 × `memory/*.md`) | **1** — Agent-mode `execute_command pytest`, refused by the hook in phase `done` |
 
 Fill with real numbers only. If B does not win, say so and say why.
+
+**B beat A′ on the referee only because A′ read the answer key** (8/8 tainted vs 8/8 clean): compare B
+with A's first write, 7/8 with the negative total shipped. B cost ~32 minutes of gates and five Bob modes
+against A's ~3 minutes and one prompt; that is the price of the receipt, not a speed claim.
+
+**Leg B, observed 2026-08-30 15:53–16:27 SGT (attempt 2; attempt 1 is `r20260830-151238`, kept as evidence, see
+below).** Spec mode read the DOCX and asked the negative-total question (<DOCX-observed>). Each of T1–T4 went
+red → green on a genuinely failing test (`tests_exit=1` on every `red -> green` gate). Bob's own rules refused
+`Also add a test for this.` in green with no tool call (record 14 is a bare Stop). Review (one spawned
+`code-reviewer` plus Bob's own passes — <subagent-rows>) returned REOPEN: the T1 tests used `50.0` for both
+codes, so SAVE20 and TENOFF were indistinguishable. The human added T5; red's test passed on first run, so the
+gate to green stayed closed and the run took `red -> review` — a transition added the same afternoon after
+attempt r20260830-140322 was stranded in `red` for exactly this reason. The second review REOPENed again on
+untested worked examples and was time-boxed: recorded, not actioned. In `done`, Agent-mode Bob refused the
+authorised-smoke prompt in prose three times in `review`, then called `execute_command pytest` once and the
+hook blocked it — the single BLOCK line. Tamper on camera: flipping `"to":"green"` in the ledger gave
+`FAIL: line 10: bad mac`; the byte-exact backup restored `PASS: 52 records ok`.
+
+**Attempt 1 (`r20260830-151238`, 29 records) is committed too and does not verify:** only T1 went through red →
+green; T2–T4 were ticked by hand, the review said so (`REOPEN`: "three plan tasks marked complete but have no
+tests"), the referee scored **4/8**, and `rx verify` fails at line 29 because a screenshot was saved into the
+repo during the last Bob turn — `files changed with no record: ['demo/Task-15-Leg-B-terminal-result.png']`.
+That is the Stop reconciler doing its job on the human, not the model; the file has since been moved out.
 
 † "Task pill" = the number beside the task's context counter (e.g. `0.218` next to `16.4k / 270.0k`). Nothing in
 this repo establishes that it is denominated in Bobcoins, and the Bobcoin gauge was not read before or after leg A —
