@@ -103,6 +103,13 @@ git status --short                # nothing
 
 ## 3. Task 15 — leg B, recorded
 
+> **Superseded for the take by `2026-08-30-leg-b-runbook.md` (v2): follow that list; this section is the
+> reference only.** Where they differ the runbook wins: the plan is merged to four tasks inside the Spec
+> task and committed **before** `gate --to red`; a `--to green` refusal after an over-delivering green is
+> handled by ticking the task and, when every task is ticked, `gate --to review` (legal from `red` since
+> `e9d9120`); the Agent-mode block beat runs in `review`; the tamper flips `"to":"green"`; nothing is
+> saved inside `C:atchet` during the run; no Bob message after `gate --to done`.
+
 **Step 0, by hand**
 - Nobody else touches `C:\ratchet` until Step 8. Read the Bobcoin gauge: `B-start coins = ___`.
   If < 40 % now: one take of leg B, no retakes (Fallbacks row).
