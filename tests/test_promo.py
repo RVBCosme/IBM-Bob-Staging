@@ -28,3 +28,10 @@ def test_apply_promos_invalid_codes():
 
     with pytest.raises(ValueError):
         apply_promos(50.0, ["SAVE20", "SAVE20"])
+
+
+# T3: Total is clamped to 0.00 — never negative
+def test_apply_promos_clamps_to_zero():
+    """T3: result is clamped to 0.00 when discount exceeds subtotal."""
+    # TENOFF subtracts $10 from a $5 subtotal; result must be 0.00, not -5.00
+    assert apply_promos(5.0, ["TENOFF"]) == 0.0
