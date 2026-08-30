@@ -1688,8 +1688,8 @@ Done 2026-08-30: `3137828` (`demo/watsonx-verdict.png`). First run failed with H
 Prerequisite: Task 7 Step 5 committed — `git ls-files .ratchet/state.json .bob/rules .bob/skills AGENTS.md` must list all four (Step 2
 renames them; Step 5 relies on `git checkout main` restoring them).
 
-- [ ] **Step 1: Freeze the start state:** `git tag ab-start; git checkout -b leg-a`.
-- [ ] **Step 2: Disable gating AND the rules** so the baseline is honest — rules are injected into
+- [x] **Step 1: Freeze the start state:** `git tag ab-start; git checkout -b leg-a`. Done 2026-08-30 ~12:45 SGT (`ab-start` = `31d3d59`).
+- [x] **Step 2: Disable gating AND the rules** so the baseline is honest — rules are injected into
 every conversation and would put leg A under the Karpathy constitution too:
 ```powershell
 Rename-Item .ratchet\state.json state.json.off
@@ -1701,7 +1701,7 @@ Rename-Item AGENTS.md AGENTS.md.off
 workspace skills describe RATCHET phases in their `description` fields and Bob auto-loaded `ratchet-spec` in
 built-in Agent mode during Smoke 12 (2026-08-30), so leaving them would put leg A under RATCHET behaviour
 with no rules at all. Record in `demo/README.md` that leg A ran with the gate off (`state.json` renamed — the hooks still run and exit 0) and rules, skills and router removed.
-- [ ] **Step 3: Leg A.** New Bob task, built-in Agent mode, one prompt:
+- [x] **Step 3: Leg A.** Observed 2026-08-30 ~12:50 SGT: Bob wrote `src/promo.py` returning −5.00 for `apply_promos(5.0, ["TENOFF"])`, did **not** ask the negative-case question, then ran `python -m pytest --tb=short -q` over the whole tree (38 tests = 30 `rx_tests` + the 8 hidden referee tests — `.bobignore` does not reach a terminal), saw the failure and patched `max(total, 0.0)`. Referee 8/8, **tainted**; 0.218 Bobcoins on the task pill; not timed. Recorded in `demo/README.md`. New Bob task, built-in Agent mode, one prompt:
 `Implement @/demo/SHOP-412.docx in src/promo.py.` Approve everything. (In Smoke 12, Agent-mode Bob read
 `.ratchet/state.json` first because rule `01-ratchet` told it to; with `.bob\rules` renamed in Step 2 that rule
 is not injected, and the `state.json` rename is the backstop. If Bob still reads `.ratchet/` or mentions phases,
@@ -1709,16 +1709,16 @@ stop and check that all four renames took effect.) Note wall-clock and the
 Bobcoin gauge before/after. Then: `python -m pytest referee -q`. Record `passed/8` in `demo/README.md`.
 Expected: `test_total_never_negative` fails (total = −5.00). **If Bob asks about the negative case,
 answer exactly as in leg B ("Never below zero") and record that it asked** — report whatever happens.
-- [ ] **Step 3b: Capture leg A before repairing it.** Screenshot `src/promo.py` (the `total = subtotal - discount`
+- [x] **Step 3b: Capture leg A before repairing it.** Done: `demo/stills/leg-a-transcript.png` (the −5.0 line and the pytest row), `leg-a-promo.png` (the patched total line), `leg-a-referee.png`, `leg-a-aprime-transcript.png`; Bob task screenshots under `bob_sessions/leg-a/`. Screenshot `src/promo.py` (the `total = subtotal - discount`
 line) → `demo/stills/leg-a-promo.png` and the `python -m pytest referee -q` output → `demo/stills/leg-a-referee.png`.
 These are Task 16's stills; nothing else records them.
-- [ ] **Step 4: Leg A′.** Same task, continue: paste the referee failure output and say `Fix this.`
+- [x] **Step 4: Leg A′.** No repair was needed (A already 8/8); the prompt went in with the referee screenshot. Bob read it, ran `python -m pytest referee -q` itself (second referee touch), changed nothing: 8/8, ~0 min, 0.089 Bobcoins, 0 files. Original step: same task, continue: paste the referee failure output and say `Fix this.`
 Re-run referee; record time, coins, pass count. This is the honest cost of A.
-- [ ] **Step 4b: Transcript check (`demo/README.md` line 6, spec §5).** Before recording numbers, search the full
+- [x] **Step 4b: Transcript check (`demo/README.md` line 6, spec §5).** Result: `referee/` was touched in both A (collected by Bob's own `pytest` run) and A′ (Bob ran `pytest referee -q`); both numbers recorded as tainted under the rows. Before recording numbers, search the full
 Bob transcript of A and A′ — every terminal command and its output included — for `referee`. If any read, ls,
 cat, grep or pytest touched `referee/`, note it under the A/A′ rows in `demo/README.md` and treat that referee
 number as tainted.
-- [ ] **Step 5:** `git add -A; git commit -m "demo: leg A and A-prime"; git checkout main;
+- [x] **Step 5** (done: `d05592b` on `leg-a`, `6176c09` + the promo-still fix on `main`): `git add -A; git commit -m "demo: leg A and A-prime"; git checkout main;
 git checkout leg-a -- demo/README.md demo/stills; git commit -am "demo: legs A and A-prime measured"`
 (`demo/stills` too — the leg-A stills are Task 16 inputs and would otherwise stay on `leg-a`).
 Confirm `.ratchet\state.json` is back (it is tracked on `main`).
